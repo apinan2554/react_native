@@ -18,7 +18,7 @@
     "react-native-paper": "^5.15.3",
     "react-native-safe-area-context": "^5.5.2",
     "react-native-screens": "^4.27.0",
-    "react-native-sqlite-storage": "^6.0.1",
+    "@op-engineering/op-sqlite": "^11.3.1",
     "react-native-toast-message": "^2.4.0",
     "react-native-vector-icons": "^10.3.0"
   },
@@ -37,7 +37,6 @@
     "@types/jest": "^29.5.13",
     "@types/node": "^26.2.0",
     "@types/react": "^19.2.0",
-    "@types/react-native-sqlite-storage": "^6.0.5",
     "@types/react-native-vector-icons": "^6.4.18",
     "@types/react-test-renderer": "^19.1.0",
     "eslint": "^8.19.0",

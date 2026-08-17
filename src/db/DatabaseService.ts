@@ -1,11 +1,9 @@
-import SQLite, { SQLiteDatabase, Transaction } from 'react-native-sqlite-storage';
+import { open, DB } from '@op-engineering/op-sqlite';
 import { Product, StockEntry, TransactionLog, DashboardData } from '../types';
-
-SQLite.enablePromise(true);
 
 class DatabaseService {
   private static instance: DatabaseService;
-  private db: SQLiteDatabase | null = null;
+  private db: DB | null = null;
 
   private constructor() {}
 
@@ -22,22 +20,22 @@ class DatabaseService {
   }
 
   async initialize(): Promise<void> {
-    this.db = await SQLite.openDatabase({ name: 'wms.db', location: 'default' });
-    await this.db.executeSql('PRAGMA foreign_keys = ON');
-    await this.createTables();
+    this.db = open({ name: 'wms.db' });
+    this.db.executeSync('PRAGMA foreign_keys = ON');
+    this.createTables();
   }
 
-  private getDb(): SQLiteDatabase {
+  private getDb(): DB {
     if (!this.db) {
       throw new Error('Database not initialized. Call initialize() first.');
     }
     return this.db;
   }
 
-  private async createTables(): Promise<void> {
+  private createTables(): void {
     const db = this.getDb();
 
-    await db.executeSql(`
+    db.executeSync(`
       CREATE TABLE IF NOT EXISTS products (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         name TEXT NOT NULL,
@@ -48,7 +46,7 @@ class DatabaseService {
       )
     `);
 
-    await db.executeSql(`
+    db.executeSync(`
       CREATE TABLE IF NOT EXISTS stock (
         productId INTEGER NOT NULL,
         zone TEXT NOT NULL,
@@ -58,7 +56,7 @@ class DatabaseService {
       )
     `);
 
-    await db.executeSql(`
+    db.executeSync(`
       CREATE TABLE IF NOT EXISTS logs (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         type TEXT NOT NULL CHECK(type IN ('inbound', 'outbound', 'transfer')),
@@ -72,30 +70,26 @@ class DatabaseService {
     `);
   }
 
-  // ========== Product CRUD (Task 2.2) ==========
+  // ========== Product CRUD ==========
 
   async getAllProducts(): Promise<Product[]> {
     const db = this.getDb();
-    const [results] = await db.executeSql('SELECT * FROM products ORDER BY id');
-    const products: Product[] = [];
-    for (let i = 0; i < results.rows.length; i++) {
-      products.push(results.rows.item(i));
-    }
-    return products;
+    const result = db.executeSync('SELECT * FROM products ORDER BY id');
+    return (result.rows ?? []) as unknown as Product[];
   }
 
   async addProduct(product: Omit<Product, 'id'>): Promise<number> {
     const db = this.getDb();
-    const [result] = await db.executeSql(
+    const result = db.executeSync(
       'INSERT INTO products (name, unit, category, description, reorderPoint) VALUES (?, ?, ?, ?, ?)',
       [product.name, product.unit, product.category, product.description || '', product.reorderPoint]
     );
-    return result.insertId;
+    return result.insertId ?? 0;
   }
 
   async updateProduct(product: Product): Promise<void> {
     const db = this.getDb();
-    await db.executeSql(
+    db.executeSync(
       'UPDATE products SET name = ?, unit = ?, category = ?, description = ?, reorderPoint = ? WHERE id = ?',
       [product.name, product.unit, product.category, product.description || '', product.reorderPoint, product.id]
     );
@@ -103,73 +97,63 @@ class DatabaseService {
 
   async deleteProduct(id: number): Promise<void> {
     const db = this.getDb();
-    await db.executeSql('DELETE FROM products WHERE id = ?', [id]);
+    db.executeSync('DELETE FROM products WHERE id = ?', [id]);
   }
 
-  // ========== Stock Queries (Task 2.3) ==========
+  // ========== Stock Queries ==========
 
   async getStockByZone(zone: string): Promise<StockEntry[]> {
     const db = this.getDb();
-    const [results] = await db.executeSql(
+    const result = db.executeSync(
       'SELECT productId, zone, quantity FROM stock WHERE zone = ? AND quantity > 0',
       [zone]
     );
-    const entries: StockEntry[] = [];
-    for (let i = 0; i < results.rows.length; i++) {
-      entries.push(results.rows.item(i));
-    }
-    return entries;
+    return (result.rows ?? []) as unknown as StockEntry[];
   }
 
   async getStockByProduct(productId: number): Promise<StockEntry[]> {
     const db = this.getDb();
-    const [results] = await db.executeSql(
+    const result = db.executeSync(
       'SELECT productId, zone, quantity FROM stock WHERE productId = ?',
       [productId]
     );
-    const entries: StockEntry[] = [];
-    for (let i = 0; i < results.rows.length; i++) {
-      entries.push(results.rows.item(i));
-    }
-    return entries;
+    return (result.rows ?? []) as unknown as StockEntry[];
   }
 
   async getTotalStockByProduct(productId: number): Promise<number> {
     const db = this.getDb();
-    const [results] = await db.executeSql(
+    const result = db.executeSync(
       'SELECT COALESCE(SUM(quantity), 0) as total FROM stock WHERE productId = ?',
       [productId]
     );
-    return results.rows.item(0).total;
+    return (result.rows?.[0] as any)?.total ?? 0;
   }
 
   async getStockQuantity(productId: number, zone: string): Promise<number> {
     const db = this.getDb();
-    const [results] = await db.executeSql(
+    const result = db.executeSync(
       'SELECT COALESCE(quantity, 0) as quantity FROM stock WHERE productId = ? AND zone = ?',
       [productId, zone]
     );
-    if (results.rows.length === 0) {
+    if (!result.rows || result.rows.length === 0) {
       return 0;
     }
-    return results.rows.item(0).quantity;
+    return (result.rows[0] as any).quantity;
   }
 
-  // ========== Transaction Methods (Task 2.3) ==========
+  // ========== Transaction Methods ==========
 
   async inbound(productId: number, toZone: string, qty: number): Promise<void> {
     if (qty <= 0) throw new Error('จำนวนต้องมากกว่า 0');
 
     const db = this.getDb();
-    await db.transaction(async (tx: Transaction) => {
-      // Upsert stock: insert or update
-      tx.executeSql(
+    await db.transaction(async (tx) => {
+      await tx.execute(
         `INSERT INTO stock (productId, zone, quantity) VALUES (?, ?, ?)
          ON CONFLICT(productId, zone) DO UPDATE SET quantity = quantity + ?`,
         [productId, toZone, qty, qty]
       );
-      // Log the transaction
-      tx.executeSql(
+      await tx.execute(
         `INSERT INTO logs (type, productId, fromZone, toZone, quantity, timestamp) VALUES ('inbound', ?, '', ?, ?, ?)`,
         [productId, toZone, qty, new Date().toISOString()]
       );
@@ -184,20 +168,17 @@ class DatabaseService {
     if (qty > currentStock) throw new Error('จำนวนเกินสต็อกที่มี');
 
     const db = this.getDb();
-    await db.transaction(async (tx: Transaction) => {
-      // Decrease source zone
-      tx.executeSql(
+    await db.transaction(async (tx) => {
+      await tx.execute(
         'UPDATE stock SET quantity = quantity - ? WHERE productId = ? AND zone = ?',
         [qty, productId, fromZone]
       );
-      // Increase destination zone (upsert)
-      tx.executeSql(
+      await tx.execute(
         `INSERT INTO stock (productId, zone, quantity) VALUES (?, ?, ?)
          ON CONFLICT(productId, zone) DO UPDATE SET quantity = quantity + ?`,
         [productId, toZone, qty, qty]
       );
-      // Log the transaction
-      tx.executeSql(
+      await tx.execute(
         `INSERT INTO logs (type, productId, fromZone, toZone, quantity, timestamp) VALUES ('transfer', ?, ?, ?, ?, ?)`,
         [productId, fromZone, toZone, qty, new Date().toISOString()]
       );
@@ -211,54 +192,40 @@ class DatabaseService {
     if (qty > currentStock) throw new Error('จำนวนเกินสต็อกที่มี');
 
     const db = this.getDb();
-    await db.transaction(async (tx: Transaction) => {
-      // Decrease stock
-      tx.executeSql(
+    await db.transaction(async (tx) => {
+      await tx.execute(
         'UPDATE stock SET quantity = quantity - ? WHERE productId = ? AND zone = ?',
         [qty, productId, fromZone]
       );
-      // Log the transaction
-      tx.executeSql(
+      await tx.execute(
         `INSERT INTO logs (type, productId, fromZone, toZone, quantity, timestamp) VALUES ('outbound', ?, ?, '', ?, ?)`,
         [productId, fromZone, qty, new Date().toISOString()]
       );
     });
   }
 
-  // ========== Dashboard Methods (Task 2.4) ==========
+  // ========== Dashboard Methods ==========
 
   async getDashboardSummary(): Promise<DashboardData> {
     const db = this.getDb();
 
-    const [totalResult] = await db.executeSql(
-      'SELECT COALESCE(SUM(quantity), 0) as total FROM stock'
-    );
-    const totalStock = totalResult.rows.item(0).total;
+    const totalResult = db.executeSync('SELECT COALESCE(SUM(quantity), 0) as total FROM stock');
+    const totalStock = (totalResult.rows?.[0] as any)?.total ?? 0;
 
-    const [zoneAResult] = await db.executeSql(
-      `SELECT COALESCE(SUM(quantity), 0) as total FROM stock WHERE zone LIKE 'A%'`
-    );
-    const zoneAStock = zoneAResult.rows.item(0).total;
+    const zoneAResult = db.executeSync(`SELECT COALESCE(SUM(quantity), 0) as total FROM stock WHERE zone LIKE 'A%'`);
+    const zoneAStock = (zoneAResult.rows?.[0] as any)?.total ?? 0;
 
-    const [zoneBResult] = await db.executeSql(
-      `SELECT COALESCE(SUM(quantity), 0) as total FROM stock WHERE zone LIKE 'B%'`
-    );
-    const zoneBStock = zoneBResult.rows.item(0).total;
+    const zoneBResult = db.executeSync(`SELECT COALESCE(SUM(quantity), 0) as total FROM stock WHERE zone LIKE 'B%'`);
+    const zoneBStock = (zoneBResult.rows?.[0] as any)?.total ?? 0;
 
-    const [zoneCResult] = await db.executeSql(
-      `SELECT COALESCE(SUM(quantity), 0) as total FROM stock WHERE zone LIKE 'C%'`
-    );
-    const zoneCStock = zoneCResult.rows.item(0).total;
+    const zoneCResult = db.executeSync(`SELECT COALESCE(SUM(quantity), 0) as total FROM stock WHERE zone LIKE 'C%'`);
+    const zoneCStock = (zoneCResult.rows?.[0] as any)?.total ?? 0;
 
-    const [productsResult] = await db.executeSql(
-      'SELECT COUNT(*) as count FROM products'
-    );
-    const totalProducts = productsResult.rows.item(0).count;
+    const productsResult = db.executeSync('SELECT COUNT(*) as count FROM products');
+    const totalProducts = (productsResult.rows?.[0] as any)?.count ?? 0;
 
-    const [logsResult] = await db.executeSql(
-      'SELECT COUNT(*) as count FROM logs'
-    );
-    const totalTransactions = logsResult.rows.item(0).count;
+    const logsResult = db.executeSync('SELECT COUNT(*) as count FROM logs');
+    const totalTransactions = (logsResult.rows?.[0] as any)?.count ?? 0;
 
     return {
       totalStock,
@@ -272,7 +239,7 @@ class DatabaseService {
 
   async getLowStockProducts(): Promise<(Product & { totalStock: number })[]> {
     const db = this.getDb();
-    const [results] = await db.executeSql(`
+    const result = db.executeSync(`
       SELECT p.*, COALESCE(
         (SELECT SUM(s.quantity) FROM stock s WHERE s.productId = p.id), 0
       ) as totalStock
@@ -282,16 +249,12 @@ class DatabaseService {
       ) < p.reorderPoint
       AND p.reorderPoint > 0
     `);
-    const products: (Product & { totalStock: number })[] = [];
-    for (let i = 0; i < results.rows.length; i++) {
-      products.push(results.rows.item(i));
-    }
-    return products;
+    return (result.rows ?? []) as unknown as (Product & { totalStock: number })[];
   }
 
   async getRecentLogs(limit: number): Promise<(TransactionLog & { productName?: string })[]> {
     const db = this.getDb();
-    const [results] = await db.executeSql(
+    const result = db.executeSync(
       `SELECT l.*, p.name as productName
        FROM logs l
        LEFT JOIN products p ON l.productId = p.id
@@ -299,11 +262,7 @@ class DatabaseService {
        LIMIT ?`,
       [limit]
     );
-    const logs: (TransactionLog & { productName?: string })[] = [];
-    for (let i = 0; i < results.rows.length; i++) {
-      logs.push(results.rows.item(i));
-    }
-    return logs;
+    return (result.rows ?? []) as unknown as (TransactionLog & { productName?: string })[];
   }
 }
 
