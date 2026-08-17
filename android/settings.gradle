@@ -1,30 +1,6 @@
 pluginManagement { includeBuild("../node_modules/@react-native/gradle-plugin") }
 plugins { id("com.facebook.react.settings") }
 extensions.configure(com.facebook.react.ReactSettingsExtension){ ex -> ex.autolinkLibrariesFromCommand() }
-
-dependencyResolutionManagement {
-    repositoriesMode.set(RepositoriesMode.PREFER_SETTINGS)
-    repositories {
-        google()
-        mavenCentral()
-        maven { url "https://jcenter.bintray.com" }
-    }
-}
-
 rootProject.name = 'ReactNativeApp'
 include ':app'
 includeBuild('../node_modules/@react-native/gradle-plugin')
-
-// Workaround: patch subprojects that call jcenter() in their build.gradle
-gradle.beforeProject { project ->
-    project.buildscript.repositories {
-        google()
-        mavenCentral()
-        maven { url "https://jcenter.bintray.com" }
-    }
-    project.repositories {
-        google()
-        mavenCentral()
-        maven { url "https://jcenter.bintray.com" }
-    }
-}
