@@ -18,4 +18,21 @@ buildscript {
     }
 }
 
+allprojects {
+    repositories {
+        google()
+        mavenCentral()
+        @Suppress("DEPRECATION")
+        jcenter() {
+            content {
+                includeModule("com.facebook.flipper", "flipper")
+                includeModule("com.facebook.flipper", "flipper-network-plugin")
+                includeModule("com.facebook.flipper", "flipper-fresco-plugin")
+                includeModule("net.zetetic", "android-database-sqlcipher")
+                includeGroup("org.pgsqlite")
+            }
+        }
+    }
+}
+
 apply plugin: "com.facebook.react.rootproject"
