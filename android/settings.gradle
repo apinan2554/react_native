@@ -7,10 +7,24 @@ dependencyResolutionManagement {
     repositories {
         google()
         mavenCentral()
-        jcenter()
+        maven { url "https://jcenter.bintray.com" }
     }
 }
 
 rootProject.name = 'ReactNativeApp'
 include ':app'
 includeBuild('../node_modules/@react-native/gradle-plugin')
+
+// Workaround: patch subprojects that call jcenter() in their build.gradle
+gradle.beforeProject { project ->
+    project.buildscript.repositories {
+        google()
+        mavenCentral()
+        maven { url "https://jcenter.bintray.com" }
+    }
+    project.repositories {
+        google()
+        mavenCentral()
+        maven { url "https://jcenter.bintray.com" }
+    }
+}
