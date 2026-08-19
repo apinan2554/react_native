@@ -1,7 +1,8 @@
 import React, { useState, useCallback } from 'react';
-import { View, ScrollView, FlatList, StyleSheet } from 'react-native';
+import { View, ScrollView, StyleSheet } from 'react-native';
 import { Text, Button, TextInput, Card } from 'react-native-paper';
 import { Picker } from '@react-native-picker/picker';
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { useFocusEffect } from '@react-navigation/native';
 import Toast from 'react-native-toast-message';
 import DatabaseService from '../db/DatabaseService';
@@ -40,57 +41,99 @@ const OutboundScreen: React.FC = () => {
 
   const handleZoneChange = (zone: string) => {
     setFromZone(zone);
+    setSelectedProduct(0);
     loadData(zone);
   };
 
   const handleOutbound = async () => {
-    const qty = parseInt(quantity);
-    if (!qty || qty <= 0) { Toast.show({ type: 'error', text1: 'กรุณากรอกจำนวนที่มากกว่า 0' }); return; }
     if (!selectedProduct) { Toast.show({ type: 'error', text1: 'กรุณาเลือกสินค้า' }); return; }
+    const qty = parseInt(quantity);
+    if (!qty || qty <= 0) { Toast.show({ type: 'error', text1: 'กรุณาระบุจำนวนที่มากกว่า 0' }); return; }
+    const prod = availableProducts.find(p => p.id === selectedProduct);
+    if (prod && qty > prod.qty) { Toast.show({ type: 'error', text1: `มีเพียง ${prod.qty} หน่วย (ไม่พอจ่าย)` }); return; }
     try {
       await DatabaseService.getInstance().outbound(selectedProduct, fromZone, qty);
-      const prod = allProducts.find(p => p.id === selectedProduct);
-      Toast.show({ type: 'success', text1: `จ่าย ${prod?.name} ${qty} ${prod?.unit} ออกจาก ${fromZone} สำเร็จ` });
+      const p = allProducts.find(pr => pr.id === selectedProduct);
+      Toast.show({ type: 'success', text1: `จ่าย ${p?.name} ${qty} ${p?.unit} ออกจาก ${fromZone} สำเร็จ` });
       setQuantity('');
       loadData(fromZone);
     } catch (e: any) { Toast.show({ type: 'error', text1: e.message }); }
   };
 
+  const noStock = availableProducts.length === 0;
+
   return (
     <ScrollView style={styles.container}>
       <Card style={styles.formCard}>
         <Card.Content>
-          <Text style={styles.label}>เลือกโซน</Text>
-          <Picker selectedValue={fromZone} onValueChange={handleZoneChange} style={styles.picker}>
-            {ALL_SUB_ZONES.map((z) => <Picker.Item key={z} label={z} value={z} />)}
-          </Picker>
+          <View style={styles.titleRow}>
+            <Icon name="package-up" size={22} color="#D84315" />
+            <Text style={styles.formTitle}>จ่ายสินค้าออกจากคลัง</Text>
+          </View>
 
-          {availableProducts.length === 0 ? (
-            <Text style={styles.noStock}>ไม่มีสินค้าในโซนนี้</Text>
+          <Text style={styles.label}>เลือกโซน</Text>
+          <View style={styles.pickerContainer}>
+            <Picker selectedValue={fromZone} onValueChange={handleZoneChange} style={styles.picker}>
+              {ALL_SUB_ZONES.map((z) => <Picker.Item key={z} label={z} value={z} />)}
+            </Picker>
+          </View>
+
+          {noStock ? (
+            <Text style={styles.warning}>* ไม่มีสินค้าในโซนนี้</Text>
           ) : (
             <>
-              <Text style={styles.label}>เลือกสินค้า</Text>
-              <Picker selectedValue={selectedProduct} onValueChange={(v) => setSelectedProduct(v)} style={styles.picker}>
-                {availableProducts.map((p) => <Picker.Item key={p.id} label={`${p.name} (คงเหลือ ${p.qty})`} value={p.id} />)}
-              </Picker>
+              <Text style={styles.label}>สินค้า</Text>
+              <View style={styles.pickerContainer}>
+                <Picker selectedValue={selectedProduct} onValueChange={(v) => setSelectedProduct(v)} style={styles.picker}>
+                  {availableProducts.map((p) => <Picker.Item key={p.id} label={`${p.id} - ${p.name} (คงเหลือ ${p.qty})`} value={p.id} />)}
+                </Picker>
+              </View>
 
-              <TextInput label="จำนวน" value={quantity} onChangeText={setQuantity} keyboardType="numeric" mode="outlined" style={styles.input} />
-              <Button mode="contained" onPress={handleOutbound} style={styles.btn} icon="package-up">จ่ายสินค้าออก</Button>
+              <TextInput
+                label="จำนวนที่จ่ายออก"
+                value={quantity}
+                onChangeText={setQuantity}
+                keyboardType="numeric"
+                mode="outlined"
+                style={styles.input}
+                dense
+              />
             </>
           )}
+
+          <Button
+            mode="contained"
+            onPress={handleOutbound}
+            style={styles.btn}
+            icon="package-up"
+            disabled={noStock}
+          >
+            📤 จ่ายสินค้าออก
+          </Button>
         </Card.Content>
       </Card>
 
       {recentLogs.length > 0 && (
         <Card style={styles.historyCard}>
           <Card.Content>
-            <Text style={styles.historyTitle}>ประวัติเบิกจ่ายล่าสุด</Text>
-            {recentLogs.slice(0, 10).map((log) => (
-              <View key={log.id} style={styles.logItem}>
-                <Text style={styles.logText}>
-                  {log.productName || `#${log.productId}`} — {log.quantity} หน่วย จาก {log.fromZone}
-                </Text>
-                <Text style={styles.logTime}>{new Date(log.timestamp).toLocaleString('th-TH')}</Text>
+            <View style={styles.titleRow}>
+              <Icon name="history" size={20} color="#546E7A" />
+              <Text style={styles.historyTitle}>ประวัติจ่ายออกล่าสุด</Text>
+            </View>
+
+            <View style={styles.tableHeader}>
+              <Text style={[styles.th, { flex: 2 }]}>สินค้า</Text>
+              <Text style={[styles.th, { flex: 1 }]}>จำนวน</Text>
+              <Text style={[styles.th, { flex: 1 }]}>โซน</Text>
+              <Text style={[styles.th, { flex: 2 }]}>วันเวลา</Text>
+            </View>
+
+            {recentLogs.map((log) => (
+              <View key={log.id} style={styles.tableRow}>
+                <Text style={[styles.td, { flex: 2 }]}>{log.productName || `#${log.productId}`}</Text>
+                <Text style={[styles.td, { flex: 1 }]}>{log.quantity}</Text>
+                <Text style={[styles.td, { flex: 1 }]}>{log.fromZone}</Text>
+                <Text style={[styles.td, { flex: 2, fontSize: 11 }]}>{new Date(log.timestamp).toLocaleString('th-TH')}</Text>
               </View>
             ))}
           </Card.Content>
@@ -101,18 +144,22 @@ const OutboundScreen: React.FC = () => {
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#ECEFF1', padding: 12 },
-  formCard: { marginBottom: 12 },
-  label: { fontSize: 14, fontWeight: '600', color: '#455A64', marginTop: 8, marginBottom: 4 },
-  picker: { backgroundColor: '#F5F5F5', marginBottom: 8 },
-  input: { marginBottom: 12 },
-  btn: { backgroundColor: '#607D8B' },
-  noStock: { textAlign: 'center', color: '#E65100', fontSize: 15, marginVertical: 20 },
-  historyCard: { marginTop: 8 },
-  historyTitle: { fontWeight: '600', marginBottom: 8, fontSize: 15 },
-  logItem: { borderBottomWidth: 1, borderBottomColor: '#E0E0E0', paddingVertical: 6 },
-  logText: { fontSize: 14, color: '#37474F' },
-  logTime: { fontSize: 11, color: '#90A4AE', marginTop: 2 },
+  container: { flex: 1, backgroundColor: '#F5F7FA', padding: 12 },
+  formCard: { marginBottom: 12, borderRadius: 12, elevation: 2 },
+  titleRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 12 },
+  formTitle: { fontSize: 17, fontWeight: '600', color: '#263238' },
+  label: { fontSize: 13, fontWeight: '600', color: '#455A64', marginTop: 8, marginBottom: 4 },
+  pickerContainer: { backgroundColor: '#F5F5F5', borderRadius: 8, borderWidth: 1, borderColor: '#E0E0E0', marginBottom: 8 },
+  picker: { height: 48 },
+  input: { marginBottom: 12, backgroundColor: '#fff' },
+  btn: { backgroundColor: '#D84315', borderRadius: 8, marginTop: 4 },
+  warning: { color: '#E65100', fontSize: 13, marginVertical: 12 },
+  historyCard: { borderRadius: 12, elevation: 1 },
+  historyTitle: { fontSize: 15, fontWeight: '600', color: '#37474F' },
+  tableHeader: { flexDirection: 'row', borderBottomWidth: 1, borderBottomColor: '#E0E0E0', paddingBottom: 6, marginBottom: 4 },
+  th: { fontSize: 12, fontWeight: '600', color: '#78909C' },
+  tableRow: { flexDirection: 'row', paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: '#F5F5F5' },
+  td: { fontSize: 13, color: '#37474F' },
 });
 
 export default OutboundScreen;

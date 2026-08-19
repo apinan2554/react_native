@@ -2,11 +2,12 @@ import React, { useState, useCallback } from 'react';
 import { View, ScrollView, StyleSheet } from 'react-native';
 import { Text, Button, TextInput, Card } from 'react-native-paper';
 import { Picker } from '@react-native-picker/picker';
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { useFocusEffect } from '@react-navigation/native';
 import Toast from 'react-native-toast-message';
 import DatabaseService from '../db/DatabaseService';
 import { Product } from '../types';
-import { ALL_SUB_ZONES, ZONES } from '../constants/zones';
+import { ALL_SUB_ZONES } from '../constants/zones';
 
 const InboundScreen: React.FC = () => {
   const [products, setProducts] = useState<Product[]>([]);
@@ -27,9 +28,9 @@ const InboundScreen: React.FC = () => {
   useFocusEffect(useCallback(() => { loadData(); }, [loadData]));
 
   const handleInbound = async () => {
-    const qty = parseInt(quantity);
-    if (!qty || qty <= 0) { Toast.show({ type: 'error', text1: 'กรุณากรอกจำนวนที่มากกว่า 0' }); return; }
     if (!selectedProduct) { Toast.show({ type: 'error', text1: 'กรุณาเลือกสินค้า' }); return; }
+    const qty = parseInt(quantity);
+    if (!qty || qty <= 0) { Toast.show({ type: 'error', text1: 'กรุณาระบุจำนวนที่มากกว่า 0' }); return; }
     try {
       await DatabaseService.getInstance().inbound(selectedProduct, selectedZone, qty);
       const prod = products.find(p => p.id === selectedProduct);
@@ -39,33 +40,77 @@ const InboundScreen: React.FC = () => {
     } catch (e: any) { Toast.show({ type: 'error', text1: e.message }); }
   };
 
-  if (products.length === 0) {
-    return <View style={styles.container}><Text style={styles.empty}>เพิ่มสินค้าใน Product Master ก่อน</Text></View>;
-  }
+  const noProducts = products.length === 0;
 
   return (
     <ScrollView style={styles.container}>
       <Card style={styles.formCard}>
         <Card.Content>
+          <View style={styles.titleRow}>
+            <Icon name="package-down" size={22} color="#1565C0" />
+            <Text style={styles.formTitle}>รับสินค้าเข้าคลัง</Text>
+          </View>
+
           <Text style={styles.label}>เลือกสินค้า</Text>
-          <Picker selectedValue={selectedProduct} onValueChange={(v) => setSelectedProduct(v)} style={styles.picker}>
-            {products.map((p) => <Picker.Item key={p.id} label={`${p.name} (${p.unit})`} value={p.id} />)}
-          </Picker>
+          <View style={styles.pickerContainer}>
+            <Picker
+              selectedValue={selectedProduct}
+              onValueChange={(v) => setSelectedProduct(v)}
+              style={styles.picker}
+              enabled={!noProducts}
+            >
+              {products.map((p) => <Picker.Item key={p.id} label={`${p.id} - ${p.name} (${p.unit})`} value={p.id} />)}
+            </Picker>
+          </View>
 
-          <Text style={styles.label}>เลือกโซนปลายทาง</Text>
-          <Picker selectedValue={selectedZone} onValueChange={(v) => setSelectedZone(v)} style={styles.picker}>
-            {ALL_SUB_ZONES.map((z) => <Picker.Item key={z} label={z} value={z} />)}
-          </Picker>
+          <Text style={styles.label}>เลือกโซน</Text>
+          <View style={styles.pickerContainer}>
+            <Picker selectedValue={selectedZone} onValueChange={(v) => setSelectedZone(v)} style={styles.picker}>
+              {ALL_SUB_ZONES.map((z) => <Picker.Item key={z} label={z} value={z} />)}
+            </Picker>
+          </View>
 
-          <TextInput label="จำนวน" value={quantity} onChangeText={setQuantity} keyboardType="numeric" mode="outlined" style={styles.input} />
-          <Button mode="contained" onPress={handleInbound} style={styles.btn} icon="package-down">รับสินค้าเข้าคลัง</Button>
+          <TextInput
+            label="จำนวน"
+            value={quantity}
+            onChangeText={setQuantity}
+            keyboardType="numeric"
+            mode="outlined"
+            style={styles.input}
+            dense
+          />
+
+          {noProducts && <Text style={styles.warning}>* เพิ่มสินค้าใน Product Master ก่อน</Text>}
+
+          <Button
+            mode="contained"
+            onPress={handleInbound}
+            style={styles.btn}
+            icon="package-down"
+            disabled={noProducts}
+          >
+            📥 รับสินค้าเข้าคลัง
+          </Button>
         </Card.Content>
       </Card>
 
       <Card style={styles.summaryCard}>
         <Card.Content>
-          <Text style={styles.summaryTitle}>สรุปสต็อกตามโซน</Text>
-          <Text>Zone A: {zoneSummary.A} | Zone B: {zoneSummary.B} | Zone C: {zoneSummary.C}</Text>
+          <Text style={styles.summaryTitle}>📊 สรุปสินค้าในแต่ละโซนหลัก</Text>
+          <View style={styles.zoneRow}>
+            <View style={[styles.zoneBadge, { backgroundColor: '#E3F2FD' }]}>
+              <Icon name="alpha-a-circle" size={20} color="#1565C0" />
+              <Text style={styles.zoneText}>Zone A — {zoneSummary.A} หน่วย</Text>
+            </View>
+            <View style={[styles.zoneBadge, { backgroundColor: '#E8F5E9' }]}>
+              <Icon name="alpha-b-circle" size={20} color="#2E7D32" />
+              <Text style={styles.zoneText}>Zone B — {zoneSummary.B} หน่วย</Text>
+            </View>
+            <View style={[styles.zoneBadge, { backgroundColor: '#EDE7F6' }]}>
+              <Icon name="alpha-c-circle" size={20} color="#4527A0" />
+              <Text style={styles.zoneText}>Zone C — {zoneSummary.C} หน่วย</Text>
+            </View>
+          </View>
         </Card.Content>
       </Card>
     </ScrollView>
@@ -73,15 +118,21 @@ const InboundScreen: React.FC = () => {
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#ECEFF1', padding: 12 },
-  formCard: { marginBottom: 12 },
-  label: { fontSize: 14, fontWeight: '600', color: '#455A64', marginTop: 8, marginBottom: 4 },
-  picker: { backgroundColor: '#F5F5F5', marginBottom: 8 },
-  input: { marginBottom: 12 },
-  btn: { backgroundColor: '#607D8B' },
-  summaryCard: { backgroundColor: '#E3F2FD' },
-  summaryTitle: { fontWeight: '600', marginBottom: 4 },
-  empty: { textAlign: 'center', marginTop: 60, fontSize: 16, color: '#90A4AE' },
+  container: { flex: 1, backgroundColor: '#F5F7FA', padding: 12 },
+  formCard: { marginBottom: 12, borderRadius: 12, elevation: 2 },
+  titleRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 12 },
+  formTitle: { fontSize: 17, fontWeight: '600', color: '#263238' },
+  label: { fontSize: 13, fontWeight: '600', color: '#455A64', marginTop: 8, marginBottom: 4 },
+  pickerContainer: { backgroundColor: '#F5F5F5', borderRadius: 8, borderWidth: 1, borderColor: '#E0E0E0', marginBottom: 8 },
+  picker: { height: 48 },
+  input: { marginBottom: 12, backgroundColor: '#fff' },
+  btn: { backgroundColor: '#1565C0', borderRadius: 8 },
+  warning: { color: '#E65100', fontSize: 13, marginBottom: 8 },
+  summaryCard: { borderRadius: 12, elevation: 1 },
+  summaryTitle: { fontWeight: '600', marginBottom: 12, fontSize: 15, color: '#37474F' },
+  zoneRow: { gap: 8 },
+  zoneBadge: { flexDirection: 'row', alignItems: 'center', gap: 8, padding: 12, borderRadius: 10 },
+  zoneText: { fontSize: 14, fontWeight: '500', color: '#37474F' },
 });
 
 export default InboundScreen;
