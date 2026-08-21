@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>React Native WMS - อธิบายโค้ดแต่ละไฟล์</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; background: #1a1a2e; color: #E0E0E0; line-height: 1.7; padding: 20px; }
+        .container { max-width: 960px; margin: 0 auto; }
+        h1 { text-align: center; color: #82B1FF; margin-bottom: 8px; font-size: 26px; }
+        .subtitle { text-align: center; color: #78909C; margin-bottom: 32px; }
+        .file-section { background: #16213e; border-radius: 12px; padding: 24px; margin-bottom: 24px; border: 1px solid #233554; }
+        .file-section h2 { color: #80CBC4; font-size: 18px; margin-bottom: 4px; }
+        .file-path { color: #FFD54F; font-size: 13px; font-family: monospace; margin-bottom: 16px; }
+        .file-purpose { background: #1a2744; padding: 12px 16px; border-radius: 8px; margin-bottom: 16px; border-left: 3px solid #82B1FF; }
+        .file-purpose strong { color: #82B1FF; }
+        .code-block { background: #0d1117; border-radius: 8px; padding: 16px; margin: 12px 0; overflow-x: auto; font-family: 'Consolas', 'Fira Code', monospace; font-size: 13px; line-height: 1.5; border: 1px solid #30363d; }
+        .code-block .comment { color: #6a9955; }
+        .code-block .keyword { color: #569cd6; }
+        .code-block .string { color: #ce9178; }
+        .code-block .type { color: #4ec9b0; }
+        .code-block .func { color: #dcdcaa; }
+        .code-block .number { color: #b5cea8; }
+        .explain { background: #1a2744; padding: 14px 16px; border-radius: 8px; margin: 10px 0; }
+        .explain-title { color: #FFD54F; font-weight: 600; font-size: 14px; margin-bottom: 6px; }
+        .explain p, .explain li { color: #B0BEC5; font-size: 14px; }
+        .explain ul { padding-left: 20px; }
+        .explain li { margin-bottom: 4px; }
+        .nav-links { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 24px; justify-content: center; }
+        .nav-links a { background: #233554; color: #82B1FF; padding: 6px 14px; border-radius: 6px; text-decoration: none; font-size: 13px; }
+        .nav-links a:hover { background: #2a4a7f; }
+        .divider { border: none; border-top: 1px solid #233554; margin: 20px 0; }
+        .tag { display: inline-block; background: #233554; color: #80CBC4; padding: 2px 8px; border-radius: 4px; font-size: 12px; margin-right: 4px; }
+        .tag.orange { color: #FFD54F; }
+        .tag.pink { color: #F48FB1; }
+    </style>
+</head>
+<body>
+<div class="container">
+
+<h1>📖 React Native WMS — อธิบายโค้ดทุกไฟล์</h1>
+<p class="subtitle">อธิบายการทำงานของโค้ดแต่ละไฟล์ เรียงตามลำดับการเรียกใช้งาน</p>
+
+<div class="nav-links">
+    <a href="#index">index.js</a>
+    <a href="#app">App.tsx</a>
+    <a href="#types">types/index.ts</a>
+    <a href="#zones">constants/zones.ts</a>
+    <a href="#db">DatabaseService.ts</a>
+    <a href="#navigator">AppNavigator.tsx</a>
+    <a href="#dashboard">DashboardScreen</a>
+    <a href="#product">ProductScreen</a>
+    <a href="#zone">ZoneScreen</a>
+    <a href="#inbound">InboundScreen</a>
+    <a href="#transfer">TransferScreen</a>
+    <a href="#outbound">OutboundScreen</a>
+</div>
+
+<!-- index.js -->
+<div class="file-section" id="index">
+    <h2>1. index.js</h2>
+    <div class="file-path">📁 /index.js</div>
+    <div class="file-purpose"><strong>หน้าที่:</strong> จุดเริ่มต้นของ App ทั้งหมด — ลงทะเบียน Root Component กับ React Native</div>
+
+    <div class="code-block">
+<span class="keyword">import</span> { AppRegistry } <span class="keyword">from</span> <span class="string">'react-native'</span>;
+<span class="keyword">import</span> App <span class="keyword">from</span> <span class="string">'./App'</span>;
+<span class="keyword">import</span> { name <span class="keyword">as</span> appName } <span class="keyword">from</span> <span class="string">'./app.json'</span>;
+
+AppRegistry.<span class="func">registerComponent</span>(appName, () => App);
+    </div>
+
+    <div class="explain">
+        <div class="explain-title">💡 อธิบาย:</div>
+        <ul>
+            <li><code>AppRegistry.registerComponent</code> — บอก React Native ว่า Component ไหนเป็น "ตัวหลัก" ที่จะแสดงผล</li>
+            <li><code>appName</code> — ชื่อ App ดึงจาก app.json (ค่า = "ReactNativeApp")</li>
+            <li><code>() => App</code> — ส่ง function ที่ return App component</li>
+            <li>ไฟล์นี้ถูกเรียกโดย Native code (MainActivity.kt บน Android) เมื่อเปิด App</li>
+        </ul>
+    </div>
+</div>
+
+<!-- App.tsx -->
+<div class="file-section" id="app">
+    <h2>2. App.tsx</h2>
+    <div class="file-path">📁 /App.tsx</div>
+    <div class="file-purpose"><strong>หน้าที่:</strong> Component หลัก — เตรียมฐานข้อมูล, ครอบ Provider, แสดง Navigation</div>
+
+    <div class="code-block">
+<span class="keyword">const</span> App: <span class="type">React.FC</span> = () => {
+  <span class="keyword">const</span> [ready, setReady] = <span class="func">useState</span>(<span class="keyword">false</span>);
+
+  <span class="func">useEffect</span>(() => {
+    <span class="keyword">const</span> init = <span class="keyword">async</span> () => {
+      <span class="keyword">await</span> DatabaseService.<span class="func">getInstance</span>().<span class="func">initialize</span>();
+      <span class="func">setReady</span>(<span class="keyword">true</span>);
+    };
+    <span class="func">init</span>();
+  }, []);
+
+  <span class="keyword">if</span> (!ready) <span class="keyword">return</span> &lt;ActivityIndicator /&gt;;
+
+  <span class="keyword">return</span> (
+    &lt;<span class="type">PaperProvider</span>&gt;
+      &lt;<span class="type">NavigationContainer</span>&gt;
+        &lt;<span class="type">AppNavigator</span> /&gt;
+      &lt;/<span class="type">NavigationContainer</span>&gt;
+      &lt;<span class="type">Toast</span> /&gt;
+    &lt;/<span class="type">PaperProvider</span>&gt;
+  );
+};
+    </div>
+
+    <div class="explain">
+        <div class="explain-title">💡 อธิบายทีละบรรทัด:</div>
+        <ul>
+            <li><code>useState(false)</code> — สร้าง state "ready" เริ่มต้น = false (ยังไม่พร้อม)</li>
+            <li><code>useEffect(..., [])</code> — ทำงานครั้งเดียวตอน App เปิด (เหมือน onMount)</li>
+            <li><code>DatabaseService.getInstance().initialize()</code> — เปิดฐานข้อมูล + สร้างตาราง</li>
+            <li><code>setReady(true)</code> — เปลี่ยน state เป็น "พร้อม" → แสดงหน้าจอหลัก</li>
+            <li><code>PaperProvider</code> — ครอบทั้ง App เพื่อให้ใช้ UI components ของ react-native-paper ได้</li>
+            <li><code>NavigationContainer</code> — ครอบระบบ navigation ทั้งหมด</li>
+            <li><code>Toast</code> — component สำหรับแสดงข้อความแจ้งเตือน (ต้องอยู่นอก NavigationContainer)</li>
+        </ul>
+    </div>
+</div>
+
+<!-- types -->
+<div class="file-section" id="types">
+    <h2>3. types/index.ts</h2>
+    <div class="file-path">📁 /src/types/index.ts</div>
+    <div class="file-purpose"><strong>หน้าที่:</strong> กำหนดรูปร่างข้อมูล (TypeScript Interface) — บอก compiler ว่าข้อมูลแต่ละตัวมี field อะไรบ้าง</div>
+
+    <div class="code-block">
+<span class="keyword">export interface</span> <span class="type">Product</span> {
+  id: <span class="type">number</span>;           <span class="comment">// รหัสสินค้า (auto-increment)</span>
+  name: <span class="type">string</span>;         <span class="comment">// ชื่อสินค้า</span>
+  unit: <span class="type">string</span>;         <span class="comment">// หน่วยนับ เช่น "ชิ้น"</span>
+  category: <span class="string">'ไฟฟ้า'</span> | <span class="string">'Accessory'</span> | <span class="string">'อิเล็กทรอนิกส์'</span> | <span class="string">'พลาสติก'</span>;
+  description: <span class="type">string</span>;   <span class="comment">// รายละเอียด</span>
+  reorderPoint: <span class="type">number</span>; <span class="comment">// จุดสั่งซื้อใหม่ (0 = ปิด)</span>
+}
+
+<span class="keyword">export interface</span> <span class="type">StockEntry</span> {
+  productId: <span class="type">number</span>;  <span class="comment">// อ้างอิงสินค้า</span>
+  zone: <span class="type">string</span>;       <span class="comment">// โซน เช่น "A1"</span>
+  quantity: <span class="type">number</span>;   <span class="comment">// จำนวนคงเหลือ</span>
+}
+
+<span class="keyword">export interface</span> <span class="type">TransactionLog</span> {
+  id: <span class="type">number</span>;
+  type: <span class="string">'inbound'</span> | <span class="string">'outbound'</span> | <span class="string">'transfer'</span>;
+  productId: <span class="type">number</span>;
+  fromZone: <span class="type">string</span> | <span class="type">null</span>;
+  toZone: <span class="type">string</span> | <span class="type">null</span>;
+  quantity: <span class="type">number</span>;
+  timestamp: <span class="type">string</span>;
+}
+
+<span class="keyword">export interface</span> <span class="type">DashboardData</span> {
+  totalStock: <span class="type">number</span>;
+  zoneAStock: <span class="type">number</span>;
+  zoneBStock: <span class="type">number</span>;
+  zoneCStock: <span class="type">number</span>;
+  totalProducts: <span class="type">number</span>;
+  totalTransactions: <span class="type">number</span>;
+}
+    </div>
+
+    <div class="explain">
+        <div class="explain-title">💡 ทำไมต้องมี Types?</div>
+        <ul>
+            <li>ช่วยให้ editor แนะนำ (autocomplete) ได้ถูกต้อง</li>
+            <li>จับ bug ตั้งแต่ตอนเขียน — ถ้าพิมพ์ชื่อ field ผิดจะ error ทันที</li>
+            <li>เป็นเอกสารของโค้ด — อ่านแล้วรู้เลยว่าข้อมูลหน้าตาเป็นยังไง</li>
+        </ul>
+    </div>
+</div>
+
+<!-- constants/zones -->
+<div class="file-section" id="zones">
+    <h2>4. constants/zones.ts</h2>
+    <div class="file-path">📁 /src/constants/zones.ts</div>
+    <div class="file-purpose"><strong>หน้าที่:</strong> ค่าคงที่ — กำหนดโซนคลังสินค้าและหมวดหมู่สินค้า</div>
+
+    <div class="code-block">
+<span class="keyword">export const</span> ZONES = {
+  A: [<span class="string">'A1'</span>, <span class="string">'A2'</span>, <span class="string">'A3'</span>],  <span class="comment">// โซนหลัก A มี 3 โซนย่อย</span>
+  B: [<span class="string">'B1'</span>, <span class="string">'B2'</span>, <span class="string">'B3'</span>],
+  C: [<span class="string">'C1'</span>, <span class="string">'C2'</span>, <span class="string">'C3'</span>],
+} <span class="keyword">as const</span>;
+
+<span class="comment">// รวมทุกโซนย่อยเป็น array เดียว: ['A1','A2','A3','B1',...]</span>
+<span class="keyword">export const</span> ALL_SUB_ZONES = [...ZONES.A, ...ZONES.B, ...ZONES.C];
+
+<span class="comment">// หมวดหมู่สินค้าที่เลือกได้</span>
+<span class="keyword">export const</span> CATEGORIES = [<span class="string">'ไฟฟ้า'</span>, <span class="string">'Accessory'</span>, <span class="string">'อิเล็กทรอนิกส์'</span>, <span class="string">'พลาสติก'</span>];
+    </div>
+</div>
+
+<!-- DatabaseService -->
+<div class="file-section" id="db">
+    <h2>5. DatabaseService.ts</h2>
+    <div class="file-path">📁 /src/db/DatabaseService.ts</div>
+    <div class="file-purpose"><strong>หน้าที่:</strong> จัดการฐานข้อมูลทั้งหมด — CRUD สินค้า, จัดการ stock, บันทึก log</div>
+
+    <div class="explain">
+        <div class="explain-title">📐 Design Pattern: Singleton</div>
+        <p>มี instance เดียวตลอด App — ทุกหน้าจอเรียกใช้ DB ตัวเดียวกัน</p>
+    </div>
+
+    <div class="code-block">
+<span class="comment">// เรียกใช้จากทุกที่:</span>
+<span class="keyword">const</span> db = DatabaseService.<span class="func">getInstance</span>();
+    </div>
+
+    <div class="explain">
+        <div class="explain-title">📦 Methods สำคัญ:</div>
+        <ul>
+            <li><span class="tag">initialize()</span> เปิด DB + สร้างตาราง</li>
+            <li><span class="tag">getAllProducts()</span> ดึงสินค้าทั้งหมด</li>
+            <li><span class="tag">addProduct()</span> เพิ่มสินค้าใหม่</li>
+            <li><span class="tag">updateProduct()</span> แก้ไขสินค้า</li>
+            <li><span class="tag">deleteProduct()</span> ลบสินค้า</li>
+            <li><span class="tag orange">inbound()</span> รับสินค้าเข้า → เพิ่ม stock + บันทึก log</li>
+            <li><span class="tag orange">transfer()</span> ย้ายสินค้า → ลด stock ต้นทาง + เพิ่ม stock ปลายทาง + log</li>
+            <li><span class="tag orange">outbound()</span> จ่ายออก → ลด stock + log</li>
+            <li><span class="tag pink">getDashboardSummary()</span> สรุปข้อมูลหน้า Dashboard</li>
+            <li><span class="tag pink">getLowStockProducts()</span> สินค้าที่ต่ำกว่า reorder point</li>
+        </ul>
+    </div>
+
+    <div class="explain">
+        <div class="explain-title">🔒 Transaction คืออะไร?</div>
+        <p>ใช้ <code>db.transaction()</code> เพื่อให้หลาย SQL ทำงานเป็น "ชุดเดียว" — ถ้า query ใดพัง ทั้งชุดจะถูก rollback (ย้อนกลับ) ป้องกันข้อมูลไม่สมบูรณ์</p>
+    </div>
+
+    <div class="code-block">
+<span class="comment">// ตัวอย่าง: inbound — ทำ 2 อย่างพร้อมกัน</span>
+<span class="keyword">await</span> db.<span class="func">transaction</span>(<span class="keyword">async</span> (tx) => {
+  <span class="comment">// 1. เพิ่ม stock (ถ้ามีอยู่แล้วก็บวกเพิ่ม)</span>
+  <span class="keyword">await</span> tx.<span class="func">execute</span>(
+    <span class="string">`INSERT INTO stock ... ON CONFLICT DO UPDATE SET quantity = quantity + ?`</span>
+  );
+  <span class="comment">// 2. บันทึกประวัติ</span>
+  <span class="keyword">await</span> tx.<span class="func">execute</span>(
+    <span class="string">`INSERT INTO logs ...`</span>
+  );
+});
+    </div>
+</div>
+
+<!-- AppNavigator -->
+<div class="file-section" id="navigator">
+    <h2>6. AppNavigator.tsx</h2>
+    <div class="file-path">📁 /src/navigation/AppNavigator.tsx</div>
+    <div class="file-purpose"><strong>หน้าที่:</strong> สร้าง Bottom Tab Bar — นำทางระหว่าง 6 หน้าจอ</div>
+
+    <div class="code-block">
+<span class="keyword">const</span> Tab = <span class="func">createBottomTabNavigator</span>();
+
+&lt;<span class="type">Tab.Navigator</span> screenOptions={{ ... }}&gt;
+  &lt;<span class="type">Tab.Screen</span> name=<span class="string">"Dashboard"</span> component={<span class="type">DashboardScreen</span>}
+    options={{ title: <span class="string">'ภาพรวม'</span>, tabBarIcon: ... }} /&gt;
+  &lt;<span class="type">Tab.Screen</span> name=<span class="string">"Products"</span> ... /&gt;
+  &lt;<span class="type">Tab.Screen</span> name=<span class="string">"Zones"</span> ... /&gt;
+  &lt;<span class="type">Tab.Screen</span> name=<span class="string">"Inbound"</span> ... /&gt;
+  &lt;<span class="type">Tab.Screen</span> name=<span class="string">"Transfer"</span> ... /&gt;
+  &lt;<span class="type">Tab.Screen</span> name=<span class="string">"Outbound"</span> ... /&gt;
+&lt;/<span class="type">Tab.Navigator</span>&gt;
+    </div>
+
+    <div class="explain">
+        <div class="explain-title">💡 อธิบาย:</div>
+        <ul>
+            <li><code>Tab.Navigator</code> — สร้าง Tab Bar ด้านล่างหน้าจอ</li>
+            <li><code>Tab.Screen</code> — แต่ละแท็บ ผูกกับ Component + กำหนดชื่อ + icon</li>
+            <li><code>screenOptions</code> — กำหนดสีและ style ร่วมสำหรับทุกแท็บ</li>
+            <li>กด Tab → React Navigation จะ mount/unmount Screen component ให้อัตโนมัติ</li>
+        </ul>
+    </div>
+</div>
+
+<!-- DashboardScreen -->
+<div class="file-section" id="dashboard">
+    <h2>7. DashboardScreen.tsx</h2>
+    <div class="file-path">📁 /src/screens/DashboardScreen.tsx</div>
+    <div class="file-purpose"><strong>หน้าที่:</strong> แสดงภาพรวมคลังสินค้า — สต็อกรวม, แยกตามโซน, เตือนสินค้าต่ำ</div>
+
+    <div class="explain">
+        <div class="explain-title">🔄 วงจรการทำงาน:</div>
+        <ul>
+            <li><code>useFocusEffect</code> — ทุกครั้งที่ "กลับมา" หน้านี้ จะโหลดข้อมูลใหม่</li>
+            <li><code>getDashboardSummary()</code> — ดึงตัวเลขสรุป (totalStock, zoneA/B/C)</li>
+            <li><code>getLowStockProducts()</code> — ดึงสินค้าที่ต่ำกว่า reorder point</li>
+            <li><code>RefreshControl</code> — ดึงลง (Pull to Refresh) เพื่ออัพเดทข้อมูล</li>
+        </ul>
+    </div>
+
+    <div class="explain">
+        <div class="explain-title">🎨 UI Components:</div>
+        <ul>
+            <li>Header section — ชื่อคลัง + icon</li>
+            <li>Stat Cards (4 ใบ) — สต็อกรวม, Zone A, Zone B, Zone C</li>
+            <li>Summary Row — จำนวนสินค้า + จำนวน transactions</li>
+            <li>Alert Section — แสดงเมื่อมีสินค้าต่ำกว่า reorder point (พื้นหลังเหลือง)</li>
+        </ul>
+    </div>
+</div>
+
+<!-- ProductScreen -->
+<div class="file-section" id="product">
+    <h2>8. ProductScreen.tsx</h2>
+    <div class="file-path">📁 /src/screens/ProductScreen.tsx</div>
+    <div class="file-purpose"><strong>หน้าที่:</strong> จัดการสินค้า — เพิ่ม / แก้ไข / ลบ + แสดงรายการพร้อม stock</div>
+
+    <div class="explain">
+        <div class="explain-title">📐 โครงสร้างหน้าจอ:</div>
+        <ul>
+            <li><strong>ฟอร์มเพิ่มสินค้า (ด้านบน):</strong> กรอกชื่อ + เลือกหมวดหมู่ → กด "เพิ่มสินค้า"</li>
+            <li><strong>รายการสินค้า (FlatList):</strong> แสดง id, ชื่อ, หมวดหมู่, stock, reorder point</li>
+            <li><strong>Reorder Highlight:</strong> สินค้าที่ stock ≤ reorderPoint → พื้นหลังสีส้ม + ⚠️</li>
+            <li><strong>Actions:</strong> ✏️ แก้ไข (เปิด Modal) | 🗑️ ลบ (Alert confirm)</li>
+        </ul>
+    </div>
+
+    <div class="explain">
+        <div class="explain-title">⚡ Logic สำคัญ:</div>
+        <ul>
+            <li><code>loadProducts()</code> — ดึงสินค้าทั้งหมด + คำนวณ totalStock ของแต่ละตัว</li>
+            <li><code>handleAdd()</code> — validate ชื่อไม่ว่าง → เรียก addProduct() → refresh list</li>
+            <li><code>handleSaveEdit()</code> — เรียก updateProduct() → ปิด Modal → refresh</li>
+            <li><code>handleDelete()</code> — Alert ยืนยัน → เรียก deleteProduct() → refresh</li>
+        </ul>
+    </div>
+</div>
+
+<!-- ZoneScreen -->
+<div class="file-section" id="zone">
+    <h2>9. ZoneScreen.tsx</h2>
+    <div class="file-path">📁 /src/screens/ZoneScreen.tsx</div>
+    <div class="file-purpose"><strong>หน้าที่:</strong> แสดงผังคลังสินค้า — โซนหลัก 3 โซน ขยายดูโซนย่อยได้</div>
+
+    <div class="explain">
+        <div class="explain-title">📐 โครงสร้าง:</div>
+        <ul>
+            <li><strong>Header Card:</strong> ชื่อ "Main Warehouse" + ข้อมูลสรุป</li>
+            <li><strong>Zone Cards:</strong> 3 ใบ (A, B, C) — แต่ละใบเป็น Expandable</li>
+            <li><strong>กดขยาย:</strong> เห็นโซนย่อย (A1, A2, A3) พร้อมจำนวน stock</li>
+        </ul>
+    </div>
+
+    <div class="explain">
+        <div class="explain-title">⚡ Logic:</div>
+        <ul>
+            <li>วน loop ทุกโซนย่อย (9 โซน) → เรียก <code>getStockByZone()</code> ทีละโซน</li>
+            <li>รวมค่า quantity ของทุก entry ในโซนนั้น</li>
+            <li><code>getMainTotal()</code> — รวม stock ของโซนย่อยทั้ง 3 ของโซนหลัก</li>
+        </ul>
+    </div>
+</div>
+
+<!-- InboundScreen -->
+<div class="file-section" id="inbound">
+    <h2>10. InboundScreen.tsx</h2>
+    <div class="file-path">📁 /src/screens/InboundScreen.tsx</div>
+    <div class="file-purpose"><strong>หน้าที่:</strong> รับสินค้าเข้าคลัง — เลือกสินค้า + โซน + จำนวน → เพิ่ม stock</div>
+
+    <div class="explain">
+        <div class="explain-title">📐 ขั้นตอนผู้ใช้:</div>
+        <ul>
+            <li>เลือกสินค้าจาก Dropdown (แสดง id + ชื่อ)</li>
+            <li>เลือกโซนปลายทาง (A1-C3)</li>
+            <li>กรอกจำนวน</li>
+            <li>กด "รับสินค้าเข้าคลัง"</li>
+        </ul>
+    </div>
+
+    <div class="explain">
+        <div class="explain-title">✅ Validation:</div>
+        <ul>
+            <li>ไม่ได้เลือกสินค้า → "กรุณาเลือกสินค้า"</li>
+            <li>จำนวน ≤ 0 → "กรุณาระบุจำนวนที่มากกว่า 0"</li>
+            <li>ไม่มีสินค้าในระบบ → ปุ่ม disabled + ข้อความเตือน</li>
+        </ul>
+    </div>
+</div>
+
+<!-- TransferScreen -->
+<div class="file-section" id="transfer">
+    <h2>11. TransferScreen.tsx</h2>
+    <div class="file-path">📁 /src/screens/TransferScreen.tsx</div>
+    <div class="file-purpose"><strong>หน้าที่:</strong> ย้ายสินค้าระหว่างโซน — ลด stock ต้นทาง + เพิ่ม stock ปลายทาง</div>
+
+    <div class="explain">
+        <div class="explain-title">📐 ขั้นตอน:</div>
+        <ul>
+            <li>เลือกโซนต้นทาง → ระบบดึงสินค้าที่มีในโซนนั้น</li>
+            <li>เลือกสินค้า (แสดงจำนวนคงเหลือ)</li>
+            <li>เลือกโซนปลายทาง (ไม่แสดงโซนต้นทาง)</li>
+            <li>กรอกจำนวน → กด "ย้ายสินค้า"</li>
+        </ul>
+    </div>
+
+    <div class="explain">
+        <div class="explain-title">✅ Validation:</div>
+        <ul>
+            <li>โซนต้นทาง = ปลายทาง → "โซนต้นทางและปลายทางต้องไม่เหมือนกัน"</li>
+            <li>จำนวน > stock ที่มี → "มีเพียง X หน่วย"</li>
+            <li>ไม่มีสินค้าในโซน → ปุ่ม disabled + "ไม่มีสินค้าในโซนต้นทาง"</li>
+            <li>เปลี่ยนโซนต้นทาง → reset การเลือกสินค้า</li>
+        </ul>
+    </div>
+</div>
+
+<!-- OutboundScreen -->
+<div class="file-section" id="outbound">
+    <h2>12. OutboundScreen.tsx</h2>
+    <div class="file-path">📁 /src/screens/OutboundScreen.tsx</div>
+    <div class="file-purpose"><strong>หน้าที่:</strong> จ่ายสินค้าออกจากคลัง — ลด stock + แสดงประวัติ</div>
+
+    <div class="explain">
+        <div class="explain-title">📐 ขั้นตอน:</div>
+        <ul>
+            <li>เลือกโซน → ระบบดึงสินค้าที่มีในโซนนั้น</li>
+            <li>เลือกสินค้า (แสดงจำนวนคงเหลือ)</li>
+            <li>กรอกจำนวน → กด "จ่ายสินค้าออก"</li>
+        </ul>
+    </div>
+
+    <div class="explain">
+        <div class="explain-title">✅ Validation:</div>
+        <ul>
+            <li>จำนวน > stock → "มีเพียง X หน่วย (ไม่พอจ่าย)"</li>
+            <li>ไม่มีสินค้า → ปุ่ม disabled + "ไม่มีสินค้าในโซนนี้"</li>
+        </ul>
+    </div>
+
+    <div class="explain">
+        <div class="explain-title">📜 ตารางประวัติ:</div>
+        <ul>
+            <li>แสดงรายการ outbound ล่าสุด 10 รายการ</li>
+            <li>คอลัมน์: สินค้า | จำนวน | โซน | วันเวลา</li>
+            <li>เรียงจากใหม่ไปเก่า</li>
+        </ul>
+    </div>
+</div>
+
+<!-- Summary -->
+<div class="file-section">
+    <h2>🔗 สรุปความสัมพันธ์ของไฟล์</h2>
+    <div class="code-block">
+<span class="comment">ผู้ใช้เปิด App</span>
+    │
+    ▼
+<span class="func">index.js</span> → ลงทะเบียน App
+    │
+    ▼
+<span class="func">App.tsx</span> → เตรียม DB + Provider
+    │
+    ▼
+<span class="func">DatabaseService.ts</span> → เปิด SQLite + สร้างตาราง
+    │
+    ▼
+<span class="func">AppNavigator.tsx</span> → แสดง Tab Bar 6 แท็บ
+    │
+    ├─ <span class="type">DashboardScreen</span> → อ่าน: getDashboardSummary + getLowStock
+    ├─ <span class="type">ProductScreen</span> → เขียน: add/update/delete Product
+    ├─ <span class="type">ZoneScreen</span> → อ่าน: getStockByZone (ทุกโซน)
+    ├─ <span class="type">InboundScreen</span> → เขียน: inbound (เพิ่ม stock)
+    ├─ <span class="type">TransferScreen</span> → เขียน: transfer (ย้าย stock)
+    └─ <span class="type">OutboundScreen</span> → เขียน: outbound (ลด stock)
+    </div>
+</div>
+
+<p style="text-align: center; color: #546E7A; margin-top: 24px; font-size: 12px;">
+    React Native WMS — Code Documentation<br>
+    Generated for learning purposes
+</p>
+
+</div>
+</body>
+</html>

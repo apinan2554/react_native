@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>React Native WMS - ขั้นตอนการทำงานของระบบ</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; background: #f5f7fa; color: #263238; line-height: 1.6; padding: 20px; }
+        .container { max-width: 900px; margin: 0 auto; }
+        h1 { text-align: center; color: #1565C0; margin-bottom: 8px; font-size: 28px; }
+        .subtitle { text-align: center; color: #78909C; margin-bottom: 32px; font-size: 14px; }
+        .section { background: #fff; border-radius: 12px; padding: 24px; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+        .section h2 { color: #455A64; font-size: 20px; margin-bottom: 16px; border-left: 4px solid #1565C0; padding-left: 12px; }
+        .section h3 { color: #37474F; font-size: 16px; margin: 16px 0 8px; }
+        .flow { display: flex; flex-direction: column; gap: 12px; }
+        .step { background: #f8f9fa; border-radius: 8px; padding: 16px; border-left: 3px solid #1565C0; }
+        .step-number { display: inline-block; background: #1565C0; color: #fff; width: 28px; height: 28px; border-radius: 50%; text-align: center; line-height: 28px; font-weight: 700; font-size: 14px; margin-right: 10px; }
+        .step-title { font-weight: 600; color: #263238; font-size: 15px; }
+        .step-desc { color: #546E7A; font-size: 14px; margin-top: 4px; margin-left: 38px; }
+        .code { background: #263238; color: #E0E0E0; padding: 12px 16px; border-radius: 8px; font-family: 'Consolas', monospace; font-size: 13px; margin: 8px 0; overflow-x: auto; }
+        .code .file { color: #80CBC4; }
+        .code .comment { color: #78909C; }
+        .code .keyword { color: #82B1FF; }
+        .arrow { text-align: center; font-size: 24px; color: #90A4AE; }
+        .file-tree { background: #fafafa; border: 1px solid #e0e0e0; border-radius: 8px; padding: 16px; font-family: monospace; font-size: 13px; }
+        .file-tree .folder { color: #1565C0; font-weight: 600; }
+        .file-tree .file { color: #455A64; }
+        .highlight { background: #FFF3E0; border-left-color: #FF9800; }
+        .tag { display: inline-block; background: #E3F2FD; color: #1565C0; padding: 2px 8px; border-radius: 4px; font-size: 12px; font-weight: 500; margin-right: 4px; }
+        .tag.green { background: #E8F5E9; color: #2E7D32; }
+        .tag.purple { background: #EDE7F6; color: #4527A0; }
+        .tag.orange { background: #FFF3E0; color: #E65100; }
+        table { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: 14px; }
+        th { background: #455A64; color: #fff; padding: 10px 12px; text-align: left; }
+        td { padding: 10px 12px; border-bottom: 1px solid #E0E0E0; }
+        tr:nth-child(even) { background: #f8f9fa; }
+    </style>
+</head>
+<body>
+<div class="container">
+
+<h1>📱 React Native WMS</h1>
+<p class="subtitle">ขั้นตอนการทำงานของระบบจัดการคลังสินค้า — อธิบายให้ผู้เริ่มต้นเข้าใจ</p>
+
+<!-- Section 1: Overview -->
+<div class="section">
+    <h2>🏗️ ภาพรวมโครงสร้างโปรเจกต์</h2>
+    <div class="file-tree">
+        <span class="folder">📁 ReactNativeApp/</span><br>
+        &nbsp;&nbsp;├── <span class="file">index.js</span> — จุดเริ่มต้น (Entry Point)<br>
+        &nbsp;&nbsp;├── <span class="file">App.tsx</span> — Component หลัก (Root)<br>
+        &nbsp;&nbsp;├── <span class="folder">📁 src/</span><br>
+        &nbsp;&nbsp;│&nbsp;&nbsp;├── <span class="folder">📁 db/</span><br>
+        &nbsp;&nbsp;│&nbsp;&nbsp;│&nbsp;&nbsp;└── <span class="file">DatabaseService.ts</span> — จัดการฐานข้อมูล SQLite<br>
+        &nbsp;&nbsp;│&nbsp;&nbsp;├── <span class="folder">📁 navigation/</span><br>
+        &nbsp;&nbsp;│&nbsp;&nbsp;│&nbsp;&nbsp;└── <span class="file">AppNavigator.tsx</span> — ระบบนำทาง (Tab Bar)<br>
+        &nbsp;&nbsp;│&nbsp;&nbsp;├── <span class="folder">📁 screens/</span><br>
+        &nbsp;&nbsp;│&nbsp;&nbsp;│&nbsp;&nbsp;├── <span class="file">DashboardScreen.tsx</span> — หน้าภาพรวม<br>
+        &nbsp;&nbsp;│&nbsp;&nbsp;│&nbsp;&nbsp;├── <span class="file">ProductScreen.tsx</span> — จัดการสินค้า<br>
+        &nbsp;&nbsp;│&nbsp;&nbsp;│&nbsp;&nbsp;├── <span class="file">ZoneScreen.tsx</span> — ดูโซนคลังสินค้า<br>
+        &nbsp;&nbsp;│&nbsp;&nbsp;│&nbsp;&nbsp;├── <span class="file">InboundScreen.tsx</span> — รับสินค้าเข้า<br>
+        &nbsp;&nbsp;│&nbsp;&nbsp;│&nbsp;&nbsp;├── <span class="file">TransferScreen.tsx</span> — ย้ายสินค้า<br>
+        &nbsp;&nbsp;│&nbsp;&nbsp;│&nbsp;&nbsp;└── <span class="file">OutboundScreen.tsx</span> — จ่ายสินค้าออก<br>
+        &nbsp;&nbsp;│&nbsp;&nbsp;├── <span class="folder">📁 types/</span><br>
+        &nbsp;&nbsp;│&nbsp;&nbsp;│&nbsp;&nbsp;└── <span class="file">index.ts</span> — กำหนด Type ข้อมูล<br>
+        &nbsp;&nbsp;│&nbsp;&nbsp;└── <span class="folder">📁 constants/</span><br>
+        &nbsp;&nbsp;│&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;└── <span class="file">zones.ts</span> — ค่าคงที่โซน/หมวดหมู่<br>
+        &nbsp;&nbsp;├── <span class="folder">📁 android/</span> — Native code สำหรับ Android<br>
+        &nbsp;&nbsp;└── <span class="folder">📁 .github/workflows/</span> — GitHub Actions (build APK)<br>
+    </div>
+</div>
+
+<!-- Section 2: Boot Flow -->
+<div class="section">
+    <h2>🚀 ขั้นตอนที่ 1: App เริ่มทำงาน (Boot Flow)</h2>
+    <p>เมื่อผู้ใช้เปิด App ระบบจะทำงานตามลำดับนี้:</p>
+
+    <div class="flow">
+        <div class="step">
+            <span class="step-number">1</span>
+            <span class="step-title">index.js — จุดเริ่มต้น</span>
+            <div class="step-desc">ลงทะเบียน App component กับ React Native runtime<br>
+            <div class="code"><span class="keyword">import</span> App <span class="keyword">from</span> <span class="file">'./App'</span>;<br>AppRegistry.registerComponent(appName, () => App);</div>
+            </div>
+        </div>
+
+        <div class="arrow">↓</div>
+
+        <div class="step">
+            <span class="step-number">2</span>
+            <span class="step-title">App.tsx — เตรียมระบบ</span>
+            <div class="step-desc">
+                - เรียก <code>DatabaseService.getInstance().initialize()</code> เพื่อเปิดฐานข้อมูล<br>
+                - แสดง Loading (ActivityIndicator) ระหว่างรอ<br>
+                - เมื่อพร้อม → แสดง Navigation + หน้าจอหลัก
+            </div>
+        </div>
+
+        <div class="arrow">↓</div>
+
+        <div class="step">
+            <span class="step-number">3</span>
+            <span class="step-title">DatabaseService.ts — สร้างฐานข้อมูล</span>
+            <div class="step-desc">
+                - เปิดไฟล์ฐานข้อมูล SQLite ชื่อ <code>wms.db</code><br>
+                - สร้างตาราง 3 ตาราง (ถ้ายังไม่มี): <span class="tag">products</span> <span class="tag green">stock</span> <span class="tag purple">logs</span><br>
+                - เปิด Foreign Keys เพื่อรักษาความสัมพันธ์ข้อมูล
+            </div>
+        </div>
+
+        <div class="arrow">↓</div>
+
+        <div class="step">
+            <span class="step-number">4</span>
+            <span class="step-title">AppNavigator.tsx — แสดง Tab Bar</span>
+            <div class="step-desc">
+                สร้าง Bottom Tab Navigation 6 แท็บ: ภาพรวม | สินค้า | โซน | รับเข้า | โอนย้าย | เบิกจ่าย
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Section 3: Database -->
+<div class="section">
+    <h2>🗄️ ขั้นตอนที่ 2: ฐานข้อมูล (Database)</h2>
+    <p>ใช้ <strong>op-sqlite</strong> — SQLite database ที่ทำงานบนมือถือโดยตรง ไม่ต้องต่อ internet</p>
+
+    <h3>ตาราง 3 ตารางหลัก:</h3>
+    <table>
+        <tr><th>ตาราง</th><th>หน้าที่</th><th>ตัวอย่างข้อมูล</th></tr>
+        <tr><td><strong>products</strong></td><td>เก็บข้อมูลสินค้า</td><td>id=1, name="สายไฟ 2.5mm", unit="ชิ้น"</td></tr>
+        <tr><td><strong>stock</strong></td><td>เก็บจำนวนสินค้าในแต่ละโซน</td><td>productId=1, zone="A1", quantity=25</td></tr>
+        <tr><td><strong>logs</strong></td><td>บันทึกประวัติทุกรายการ</td><td>type="inbound", quantity=10, toZone="A1"</td></tr>
+    </table>
+
+    <h3>Pattern: Singleton</h3>
+    <div class="code">
+        <span class="comment">// เรียกใช้ Database ได้จากทุกที่ผ่าน getInstance()</span><br>
+        <span class="keyword">const</span> db = DatabaseService.getInstance();<br>
+        <span class="keyword">const</span> products = <span class="keyword">await</span> db.getAllProducts();
+    </div>
+</div>
+
+<!-- Section 4: Screens -->
+<div class="section">
+    <h2>📱 ขั้นตอนที่ 3: หน้าจอแต่ละหน้าทำอะไร</h2>
+
+    <div class="flow">
+        <div class="step">
+            <span class="step-number">📊</span>
+            <span class="step-title">DashboardScreen — ภาพรวมคลัง</span>
+            <div class="step-desc">
+                <strong>ทำอะไร:</strong> แสดงสรุปจำนวนสต็อกทั้งหมด แยกตาม Zone A/B/C + เตือนสินค้าต่ำกว่า Reorder Point<br>
+                <strong>ข้อมูลจาก:</strong> <code>getDashboardSummary()</code> + <code>getLowStockProducts()</code><br>
+                <strong>อัพเดท:</strong> ทุกครั้งที่เปิดหน้านี้ (useFocusEffect) + Pull to Refresh
+            </div>
+        </div>
+
+        <div class="step">
+            <span class="step-number">📦</span>
+            <span class="step-title">ProductScreen — จัดการสินค้า</span>
+            <div class="step-desc">
+                <strong>ทำอะไร:</strong> เพิ่ม / แก้ไข / ลบ สินค้า<br>
+                <strong>ฟอร์มเพิ่ม:</strong> อยู่ด้านบน กรอกชื่อ + เลือกหมวดหมู่ → กดเพิ่ม<br>
+                <strong>แก้ไข:</strong> กดไอคอนดินสอ → เปิด Modal แก้ไข<br>
+                <strong>Highlight:</strong> สินค้าที่ stock ≤ reorderPoint → แสดงพื้นหลังสีส้ม ⚠️
+            </div>
+        </div>
+
+        <div class="step">
+            <span class="step-number">🏭</span>
+            <span class="step-title">ZoneScreen — ผังคลังสินค้า</span>
+            <div class="step-desc">
+                <strong>ทำอะไร:</strong> แสดงโครงสร้างโซน 3 โซนหลัก (A, B, C) แต่ละโซนมี 3 โซนย่อย<br>
+                <strong>UI:</strong> Expandable list — คลิกเพื่อดูโซนย่อยและจำนวนสต็อก
+            </div>
+        </div>
+
+        <div class="step" style="border-left-color: #2E7D32;">
+            <span class="step-number">📥</span>
+            <span class="step-title">InboundScreen — รับสินค้าเข้าคลัง</span>
+            <div class="step-desc">
+                <strong>ทำอะไร:</strong> เลือกสินค้า → เลือกโซน → กรอกจำนวน → รับเข้า<br>
+                <strong>Logic:</strong> เพิ่ม quantity ในตาราง stock + บันทึก log ประเภท "inbound"<br>
+                <strong>Validation:</strong> ต้องเลือกสินค้า, จำนวนต้อง > 0
+            </div>
+        </div>
+
+        <div class="step" style="border-left-color: #00897B;">
+            <span class="step-number">🔄</span>
+            <span class="step-title">TransferScreen — ย้ายสินค้าระหว่างโซน</span>
+            <div class="step-desc">
+                <strong>ทำอะไร:</strong> เลือกโซนต้นทาง → เลือกสินค้า → เลือกโซนปลายทาง → กรอกจำนวน → ย้าย<br>
+                <strong>Logic:</strong> ลด stock โซนต้นทาง + เพิ่ม stock โซนปลายทาง + บันทึก log ประเภท "transfer"<br>
+                <strong>Validation:</strong> โซนต้นทาง ≠ ปลายทาง, จำนวน ≤ stock ที่มี
+            </div>
+        </div>
+
+        <div class="step" style="border-left-color: #D84315;">
+            <span class="step-number">📤</span>
+            <span class="step-title">OutboundScreen — จ่ายสินค้าออก</span>
+            <div class="step-desc">
+                <strong>ทำอะไร:</strong> เลือกโซน → เลือกสินค้า → กรอกจำนวน → จ่ายออก<br>
+                <strong>Logic:</strong> ลด stock ในโซนที่เลือก + บันทึก log ประเภท "outbound"<br>
+                <strong>เพิ่มเติม:</strong> แสดงตารางประวัติจ่ายออกล่าสุด 10 รายการ
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Section 5: Data Flow -->
+<div class="section">
+    <h2>🔄 ขั้นตอนที่ 4: การไหลของข้อมูล (Data Flow)</h2>
+    <p>ตัวอย่าง: ผู้ใช้รับสินค้า "สายไฟ" 10 ชิ้น เข้าโซน A1</p>
+
+    <div class="flow">
+        <div class="step">
+            <span class="step-number">1</span>
+            <span class="step-title">ผู้ใช้กรอกข้อมูลใน InboundScreen</span>
+            <div class="step-desc">เลือก: สายไฟ | โซน: A1 | จำนวน: 10 → กด "รับสินค้าเข้าคลัง"</div>
+        </div>
+        <div class="arrow">↓</div>
+        <div class="step">
+            <span class="step-number">2</span>
+            <span class="step-title">Validation ตรวจสอบข้อมูล</span>
+            <div class="step-desc">เช็ค: สินค้าถูกเลือก ✓ | จำนวน > 0 ✓ → ผ่าน</div>
+        </div>
+        <div class="arrow">↓</div>
+        <div class="step">
+            <span class="step-number">3</span>
+            <span class="step-title">DatabaseService.inbound() ทำงาน</span>
+            <div class="step-desc">
+                ทำใน Transaction (ทำทั้งหมดหรือไม่ทำเลย):<br>
+                - INSERT/UPDATE ตาราง stock → A1 เพิ่ม 10<br>
+                - INSERT ตาราง logs → บันทึกประวัติ
+            </div>
+        </div>
+        <div class="arrow">↓</div>
+        <div class="step">
+            <span class="step-number">4</span>
+            <span class="step-title">แจ้งผลและอัพเดทหน้าจอ</span>
+            <div class="step-desc">แสดง Toast "รับ สายไฟ 10 ชิ้น เข้า A1 สำเร็จ" → โหลดข้อมูลใหม่</div>
+        </div>
+    </div>
+</div>
+
+<!-- Section 6: Libraries -->
+<div class="section">
+    <h2>📚 ขั้นตอนที่ 5: Libraries ที่ใช้</h2>
+    <table>
+        <tr><th>Library</th><th>ทำหน้าที่</th></tr>
+        <tr><td><strong>react-native</strong> 0.87</td><td>Framework หลักสร้าง Mobile App</td></tr>
+        <tr><td><strong>@react-navigation/bottom-tabs</strong></td><td>สร้าง Tab Bar นำทางระหว่างหน้าจอ</td></tr>
+        <tr><td><strong>react-native-paper</strong></td><td>UI Components สำเร็จรูป (Card, Button, TextInput)</td></tr>
+        <tr><td><strong>@op-engineering/op-sqlite</strong></td><td>ฐานข้อมูล SQLite บนมือถือ</td></tr>
+        <tr><td><strong>react-native-vector-icons</strong></td><td>ไอคอน Material Design</td></tr>
+        <tr><td><strong>react-native-toast-message</strong></td><td>แสดงข้อความแจ้งเตือน (Toast/SnackBar)</td></tr>
+        <tr><td><strong>@react-native-picker/picker</strong></td><td>Dropdown เลือกค่า</td></tr>
+    </table>
+</div>
+
+<!-- Section 7: Build -->
+<div class="section">
+    <h2>🏭 ขั้นตอนที่ 6: Build APK และ Deploy</h2>
+    <div class="flow">
+        <div class="step">
+            <span class="step-number">1</span>
+            <span class="step-title">Push code ขึ้น GitHub (branch: main)</span>
+            <div class="step-desc">Git add → commit → push</div>
+        </div>
+        <div class="arrow">↓</div>
+        <div class="step">
+            <span class="step-number">2</span>
+            <span class="step-title">GitHub Actions ทำงานอัตโนมัติ</span>
+            <div class="step-desc">
+                ไฟล์: <code>.github/workflows/build-apk.yml</code><br>
+                - Setup Node.js + Java 17 + Android SDK<br>
+                - npm install (ติดตั้ง dependencies)<br>
+                - Gradle assembleRelease (build APK)
+            </div>
+        </div>
+        <div class="arrow">↓</div>
+        <div class="step">
+            <span class="step-number">3</span>
+            <span class="step-title">Download APK จาก Artifacts</span>
+            <div class="step-desc">ไปที่ GitHub → Actions → คลิก build สำเร็จ → Download APK</div>
+        </div>
+        <div class="arrow">↓</div>
+        <div class="step">
+            <span class="step-number">4</span>
+            <span class="step-title">ติดตั้งบนมือถือ หรือทดสอบบน Emulator</span>
+            <div class="step-desc">ส่งไฟล์ APK ไปมือถือ → ติดตั้ง → ใช้งานได้เลย (ไม่ต้องต่อ internet)</div>
+        </div>
+    </div>
+</div>
+
+<!-- Section 8: Zone Structure -->
+<div class="section">
+    <h2>🗺️ โครงสร้างโซนคลังสินค้า</h2>
+    <div style="display: flex; gap: 16px; flex-wrap: wrap; justify-content: center; margin-top: 12px;">
+        <div style="background: #E3F2FD; padding: 20px; border-radius: 12px; text-align: center; min-width: 150px;">
+            <div style="font-size: 24px; font-weight: 700; color: #1565C0;">Zone A</div>
+            <div style="margin-top: 8px; color: #455A64;">A1 • A2 • A3</div>
+        </div>
+        <div style="background: #E8F5E9; padding: 20px; border-radius: 12px; text-align: center; min-width: 150px;">
+            <div style="font-size: 24px; font-weight: 700; color: #2E7D32;">Zone B</div>
+            <div style="margin-top: 8px; color: #455A64;">B1 • B2 • B3</div>
+        </div>
+        <div style="background: #EDE7F6; padding: 20px; border-radius: 12px; text-align: center; min-width: 150px;">
+            <div style="font-size: 24px; font-weight: 700; color: #4527A0;">Zone C</div>
+            <div style="margin-top: 8px; color: #455A64;">C1 • C2 • C3</div>
+        </div>
+    </div>
+</div>
+
+<p style="text-align: center; color: #90A4AE; margin-top: 24px; font-size: 13px;">
+    React Native WMS — Warehouse Management System<br>
+    Built with React Native CLI + op-sqlite + react-native-paper
+</p>
+
+</div>
+</body>
+</html>
