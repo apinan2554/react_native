@@ -15,6 +15,7 @@ const ProductScreen: React.FC = () => {
   const [editProduct, setEditProduct] = useState<Product | null>(null);
 
   // Add form state
+  const [addId, setAddId] = useState('');
   const [addName, setAddName] = useState('');
   const [addCategory, setAddCategory] = useState<Product['category']>(CATEGORIES[0] as Product['category']);
 
@@ -41,6 +42,7 @@ const ProductScreen: React.FC = () => {
     try {
       await db.addProduct({ name: addName.trim(), unit: 'ชิ้น', category: addCategory, description: '', reorderPoint: 0 });
       Toast.show({ type: 'success', text1: `เพิ่ม ${addName.trim()} สำเร็จ` });
+      setAddId('');
       setAddName('');
       setAddCategory(CATEGORIES[0] as Product['category']);
       loadProducts();
@@ -107,17 +109,31 @@ const ProductScreen: React.FC = () => {
         <Card.Content>
           <Text style={styles.formTitle}>➕ เพิ่มสินค้า</Text>
           <TextInput
+            label="รหัสสินค้า"
+            value={addId}
+            onChangeText={setAddId}
+            mode="outlined"
+            style={styles.input}
+            dense
+            textColor="#000"
+            outlineColor="#E0E0E0"
+            activeOutlineColor="#1565C0"
+          />
+          <TextInput
             label="ชื่อสินค้า"
             value={addName}
             onChangeText={setAddName}
             mode="outlined"
             style={styles.input}
             dense
+            textColor="#000"
+            outlineColor="#E0E0E0"
+            activeOutlineColor="#1565C0"
           />
           <Text style={styles.pickerLabel}>ประเภท</Text>
           <View style={styles.pickerContainer}>
-            <Picker selectedValue={addCategory} onValueChange={(v) => setAddCategory(v as Product['category'])} style={styles.picker}>
-              {CATEGORIES.map((c) => <Picker.Item key={c} label={c} value={c} />)}
+            <Picker selectedValue={addCategory} onValueChange={(v) => setAddCategory(v as Product['category'])} style={[styles.picker, { color: '#000' }]}>
+              {CATEGORIES.map((c) => <Picker.Item key={c} label={c} value={c} color="#000" />)}
             </Picker>
           </View>
           <Button mode="contained" onPress={handleAdd} style={styles.addBtn} icon="plus">

@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Product Screen - Updated Mockup</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', sans-serif; background: #263238; display: flex; justify-content: center; padding: 40px; }
+        .phone { width: 375px; height: 780px; background: #F5F7FA; border-radius: 32px; overflow: hidden; box-shadow: 0 8px 32px rgba(0,0,0,0.4); border: 8px solid #1a1a1a; display: flex; flex-direction: column; }
+        .status-bar { background: #455A64; padding: 8px 16px; display: flex; justify-content: space-between; color: #fff; font-size: 11px; }
+        .header { background: #455A64; padding: 14px 16px; }
+        .header-title { color: #fff; font-size: 17px; font-weight: 600; }
+        .content { flex: 1; overflow-y: auto; padding: 12px; }
+        .tab-bar { display: flex; background: #fff; border-top: 1px solid #E0E0E0; padding: 6px 0 10px; }
+        .tab { flex: 1; text-align: center; font-size: 10px; color: #90A4AE; }
+        .tab.active { color: #1565C0; }
+        .tab-icon { font-size: 18px; display: block; margin-bottom: 2px; }
+        .card { background: #fff; border-radius: 12px; padding: 16px; margin-bottom: 10px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
+        .form-title { font-size: 15px; font-weight: 600; color: #37474F; margin-bottom: 12px; }
+        .form-group { margin-bottom: 10px; }
+        .form-label { font-size: 11px; color: #455A64; font-weight: 500; margin-bottom: 3px; }
+        .form-input { width: 100%; padding: 12px 14px; border: 1.5px solid #E0E0E0; border-radius: 8px; font-size: 15px; background: #fff; color: #000; }
+        .form-input:focus { border-color: #1565C0; outline: none; }
+        .form-input::placeholder { color: #90A4AE; }
+        .form-select { width: 100%; padding: 12px 14px; border: 1.5px solid #E0E0E0; border-radius: 8px; font-size: 15px; background: #F5F5F5; color: #000; }
+        .btn { width: 100%; padding: 14px; border: none; border-radius: 8px; color: #fff; font-size: 15px; font-weight: 600; cursor: pointer; margin-top: 6px; background: #1565C0; }
+        .list-title { font-size: 14px; font-weight: 600; color: #455A64; margin-bottom: 8px; }
+        .product-item { display: flex; align-items: center; padding: 14px; background: #fff; border-radius: 10px; margin-bottom: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
+        .product-item.low { background: #FFF3E0; border-left: 4px solid #FF9800; }
+        .product-info { flex: 1; }
+        .product-name { font-size: 15px; font-weight: 600; color: #000; }
+        .product-detail { font-size: 12px; color: #546E7A; margin-top: 4px; }
+        .product-actions { display: flex; gap: 6px; }
+        .icon-btn { width: 34px; height: 34px; border-radius: 50%; border: none; font-size: 15px; cursor: pointer; background: #F0F0F0; display: flex; align-items: center; justify-content: center; }
+        .highlight { background: #FFF3E0; padding: 2px 6px; border-radius: 4px; }
+        .note { text-align: center; color: #78909C; font-size: 12px; margin-top: 16px; }
+        .change-marker { position: absolute; right: -8px; top: -8px; background: #E53935; color: #fff; font-size: 10px; padding: 2px 6px; border-radius: 10px; font-weight: 700; }
+        .section { position: relative; }
+        .new-badge { display: inline-block; background: #4CAF50; color: #fff; font-size: 10px; padding: 2px 6px; border-radius: 4px; margin-left: 6px; font-weight: 600; }
+    </style>
+</head>
+<body>
+
+<div class="phone">
+    <div class="status-bar"><span>9:48</span><span>📶 🔋 69%</span></div>
+    <div class="header"><div class="header-title">สินค้า</div></div>
+    <div class="content">
+        <!-- Add Form -->
+        <div class="card">
+            <div class="form-title">➕ เพิ่มสินค้า</div>
+
+            <!-- NEW: รหัสสินค้า -->
+            <div class="form-group">
+                <div class="form-label">รหัสสินค้า <span class="new-badge">NEW</span></div>
+                <input class="form-input" placeholder="รหัสสินค้า" value="P004" style="color: #000;">
+            </div>
+
+            <div class="form-group">
+                <div class="form-label">ชื่อสินค้า</div>
+                <input class="form-input" placeholder="ชื่อสินค้า" value="หลอดไฟ LED" style="color: #000;">
+            </div>
+
+            <div class="form-group">
+                <div class="form-label">ประเภท</div>
+                <select class="form-select" style="color: #000;">
+                    <option>ไฟฟ้า</option>
+                    <option>Accessory</option>
+                    <option>อิเล็กทรอนิกส์</option>
+                    <option>พลาสติก</option>
+                </select>
+            </div>
+
+            <button class="btn">➕ เพิ่มสินค้า</button>
+        </div>
+
+        <!-- Product List -->
+        <div class="list-title">📋 รายการสินค้า (3)</div>
+
+        <div class="product-item low">
+            <div class="product-info">
+                <div class="product-name" style="color: #000;">#1 สายไฟ 2.5mm ⚠️</div>
+                <div class="product-detail">ไฟฟ้า | ชิ้น | Reorder: 10 | Stock: 5</div>
+            </div>
+            <div class="product-actions">
+                <button class="icon-btn" style="color: #1565C0;">✏️</button>
+                <button class="icon-btn" style="color: #D32F2F;">🗑️</button>
+            </div>
+        </div>
+
+        <div class="product-item">
+            <div class="product-info">
+                <div class="product-name" style="color: #000;">#2 เคสโทรศัพท์</div>
+                <div class="product-detail">Accessory | ชิ้น | Reorder: 0 | Stock: 30</div>
+            </div>
+            <div class="product-actions">
+                <button class="icon-btn">✏️</button>
+                <button class="icon-btn">🗑️</button>
+            </div>
+        </div>
+
+        <div class="product-item">
+            <div class="product-info">
+                <div class="product-name" style="color: #000;">#3 แผงวงจร PCB</div>
+                <div class="product-detail">อิเล็กทรอนิกส์ | แผ่น | Reorder: 5 | Stock: 20</div>
+            </div>
+            <div class="product-actions">
+                <button class="icon-btn">✏️</button>
+                <button class="icon-btn">🗑️</button>
+            </div>
+        </div>
+
+        <div class="note">
+            สิ่งที่เปลี่ยน:<br>
+            ✅ เพิ่มช่อง "รหัสสินค้า" ด้านบน<br>
+            ✅ ตัวหนังสือใน input/picker = สีดำ<br>
+            ✅ พื้น input = สีขาว
+        </div>
+    </div>
+    <div class="tab-bar">
+        <div class="tab"><span class="tab-icon">📊</span>ภาพรวม</div>
+        <div class="tab active"><span class="tab-icon">📦</span>สินค้า</div>
+        <div class="tab"><span class="tab-icon">🏭</span>โซน</div>
+        <div class="tab"><span class="tab-icon">📥</span>รับเข้า</div>
+        <div class="tab"><span class="tab-icon">🔄</span>โอนย้าย</div>
+        <div class="tab"><span class="tab-icon">📤</span>เบิกจ่าย</div>
+    </div>
+</div>
+
+</body>
+</html>
