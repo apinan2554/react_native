@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OutboundScreen.tsx - อธิบายทุกบรรทัด</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', sans-serif; background: #0d1117; color: #c9d1d9; padding: 20px; line-height: 1.7; }
+        .container { max-width: 1000px; margin: 0 auto; }
+        h1 { color: #58a6ff; text-align: center; margin-bottom: 4px; }
+        .subtitle { text-align: center; color: #8b949e; margin-bottom: 24px; }
+        .line { display: flex; gap: 12px; margin-bottom: 2px; padding: 4px 8px; border-radius: 4px; }
+        .line:hover { background: #161b22; }
+        .line-num { color: #484f58; font-family: monospace; font-size: 12px; min-width: 30px; text-align: right; user-select: none; padding-top: 2px; }
+        .line-code { font-family: 'Consolas', 'Fira Code', monospace; font-size: 13px; flex: 1; white-space: pre-wrap; word-break: break-all; }
+        .line-explain { background: #1c2128; border-left: 3px solid #58a6ff; padding: 8px 12px; margin: 4px 0 8px 42px; border-radius: 0 6px 6px 0; font-size: 13px; color: #adbac7; }
+        .line-explain.green { border-left-color: #3fb950; }
+        .line-explain.orange { border-left-color: #f0883e; }
+        .line-explain.red { border-left-color: #f85149; }
+        .kw { color: #ff7b72; }
+        .str { color: #a5d6ff; }
+        .typ { color: #79c0ff; }
+        .fn { color: #d2a8ff; }
+        .cm { color: #8b949e; font-style: italic; }
+        .num { color: #79c0ff; }
+        .sep { border-top: 1px solid #21262d; margin: 16px 0; }
+        .section-label { background: #21262d; color: #58a6ff; padding: 8px 16px; border-radius: 6px; font-weight: 600; margin: 16px 0 8px; font-size: 14px; }
+    </style>
+</head>
+<body>
+<div class="container">
+
+<h1>📤 OutboundScreen.tsx — อธิบายทุกบรรทัด</h1>
+<p class="subtitle">source code จริงพร้อมคำอธิบายภาษาไทย ให้เด็กหัดเขียนอ่านเข้าใจ</p>
+
+<!-- IMPORT SECTION -->
+<div class="section-label">📦 ส่วนที่ 1: Import (นำเข้าเครื่องมือ)</div>
+
+<div class="line"><span class="line-num">1</span><span class="line-code"><span class="kw">import</span> React, { useState, useCallback } <span class="kw">from</span> <span class="str">'react'</span>;</span></div>
+<div class="line-explain">นำเข้า React (ตัวหลัก) + useState (สร้างตัวแปร) + useCallback (จำ function ไว้ไม่สร้างใหม่ทุกรอบ)</div>
+
+<div class="line"><span class="line-num">2</span><span class="line-code"><span class="kw">import</span> { View, ScrollView, StyleSheet, Alert } <span class="kw">from</span> <span class="str">'react-native'</span>;</span></div>
+<div class="line-explain">นำเข้า component พื้นฐาน: View=กล่อง, ScrollView=กล่องเลื่อนได้, StyleSheet=จัดสไตล์, Alert=popup ถาม</div>
+
+<div class="line"><span class="line-num">3</span><span class="line-code"><span class="kw">import</span> { Text, Button, TextInput, Card } <span class="kw">from</span> <span class="str">'react-native-paper'</span>;</span></div>
+<div class="line-explain">นำเข้า UI สำเร็จรูป: Text=ข้อความ, Button=ปุ่ม, TextInput=ช่องกรอก, Card=การ์ดมีเงา</div>
+
+<div class="line"><span class="line-num">4</span><span class="line-code"><span class="kw">import</span> { Picker } <span class="kw">from</span> <span class="str">'@react-native-picker/picker'</span>;</span></div>
+<div class="line-explain">นำเข้า Picker = dropdown เลือกค่า (เหมือน &lt;select&gt; ใน HTML)</div>
+
+<div class="line"><span class="line-num">5</span><span class="line-code"><span class="kw">import</span> Icon <span class="kw">from</span> <span class="str">'react-native-vector-icons/MaterialCommunityIcons'</span>;</span></div>
+<div class="line-explain">นำเข้า Icon = รูปไอคอน (เช่น ไอคอนกล่อง, ไอคอนลูกศร)</div>
+
+<div class="line"><span class="line-num">6</span><span class="line-code"><span class="kw">import</span> { useFocusEffect } <span class="kw">from</span> <span class="str">'@react-navigation/native'</span>;</span></div>
+<div class="line-explain">นำเข้า useFocusEffect = "ทำอะไรสักอย่างทุกครั้งที่หน้านี้ถูกเปิด/กลับมา"</div>
+
+<div class="line"><span class="line-num">7</span><span class="line-code"><span class="kw">import</span> Toast <span class="kw">from</span> <span class="str">'react-native-toast-message'</span>;</span></div>
+<div class="line-explain">นำเข้า Toast = ข้อความแจ้งเตือนที่โผล่ด้านบนแปปเดียวแล้วหาย (เช่น "สำเร็จ!" "error!")</div>
+
+<div class="line"><span class="line-num">8</span><span class="line-code"><span class="kw">import</span> DatabaseService <span class="kw">from</span> <span class="str">'../db/DatabaseService'</span>;</span></div>
+<div class="line-explain">นำเข้าตัวจัดการฐานข้อมูล — ใช้อ่าน/เขียนข้อมูลสินค้า, สต็อก, ประวัติ</div>
+
+<div class="line"><span class="line-num">9</span><span class="line-code"><span class="kw">import</span> { <span class="typ">Product</span>, <span class="typ">StockEntry</span>, <span class="typ">TransactionLog</span> } <span class="kw">from</span> <span class="str">'../types'</span>;</span></div>
+<div class="line-explain">นำเข้า Type (รูปร่างข้อมูล) — TypeScript ใช้บอกว่าตัวแปรมี field อะไรบ้าง</div>
+
+<div class="sep"></div>
+
+<!-- STATE SECTION -->
+<div class="section-label">🧠 ส่วนที่ 2: State (ตัวแปรที่หน้าจอจำไว้)</div>
+
+<div class="line"><span class="line-num">11</span><span class="line-code"><span class="kw">const</span> OutboundScreen: <span class="typ">React.FC</span> = () => {</span></div>
+<div class="line-explain">สร้าง component ชื่อ OutboundScreen (= 1 หน้าจอ) เป็น function</div>
+
+<div class="line"><span class="line-num">12</span><span class="line-code">  <span class="kw">const</span> [products, setProducts] = <span class="fn">useState</span>&lt;<span class="typ">Product[]</span>&gt;([]);</span></div>
+<div class="line-explain"><b>products</b> = รายชื่อสินค้าทั้งหมด (เริ่มต้นเป็น array ว่าง [])<br><b>setProducts</b> = ฟังก์ชันใช้เปลี่ยนค่า products</div>
+
+<div class="line"><span class="line-num">13</span><span class="line-code">  <span class="kw">const</span> [selectedProduct, setSelectedProduct] = <span class="fn">useState</span>&lt;<span class="typ">number</span>&gt;(<span class="num">0</span>);</span></div>
+<div class="line-explain"><b>selectedProduct</b> = id ของสินค้าที่ผู้ใช้เลือกอยู่ตอนนี้ (เริ่มต้น = 0 = ยังไม่เลือก)</div>
+
+<div class="line"><span class="line-num">14</span><span class="line-code">  <span class="kw">const</span> [productStock, setProductStock] = <span class="fn">useState</span>&lt;<span class="typ">StockEntry[]</span>&gt;([]);</span></div>
+<div class="line-explain"><b>productStock</b> = สต็อกของสินค้าที่เลือก — บอกว่าอยู่โซนไหน กี่ชิ้น<br>เช่น [{zone:"A1", quantity:100}, {zone:"B2", quantity:50}]</div>
+
+<div class="line"><span class="line-num">15</span><span class="line-code">  <span class="kw">const</span> [quantity, setQuantity] = <span class="fn">useState</span>(<span class="str">''</span>);</span></div>
+<div class="line-explain"><b>quantity</b> = ตัวเลขที่ผู้ใช้พิมพ์ในช่อง "จำนวนที่ต้องการเบิก" (เป็น string เพราะมาจาก TextInput)</div>
+
+<div class="line"><span class="line-num">16</span><span class="line-code">  <span class="kw">const</span> [recentLogs, setRecentLogs] = <span class="fn">useState</span>&lt;...&gt;([]);</span></div>
+<div class="line-explain"><b>recentLogs</b> = ประวัติเบิกจ่ายล่าสุด 10 รายการ (แสดงด้านล่าง)</div>
+
+<div class="line"><span class="line-num">17</span><span class="line-code">  <span class="kw">const</span> [lastOutboundSummary, setLastOutboundSummary] = <span class="fn">useState</span>(...<span class="kw">null</span>);</span></div>
+<div class="line-explain"><b>lastOutboundSummary</b> = สรุปการเบิกครั้งล่าสุด (เบิกจากโซนไหน เท่าไหร่ เหลือเท่าไหร่) เริ่มต้น = null (ยังไม่มี)</div>
+
+<div class="sep"></div>
+
+<!-- LOAD DATA -->
+<div class="section-label">📂 ส่วนที่ 3: loadData (โหลดข้อมูลจาก Database)</div>
+
+<div class="line"><span class="line-num">19</span><span class="line-code">  <span class="kw">const</span> <span class="fn">loadData</span> = <span class="fn">useCallback</span>(<span class="kw">async</span> () => {</span></div>
+<div class="line-explain">สร้างฟังก์ชัน loadData — <b>async</b> = มีคำสั่งที่ต้องรอ (เช่น อ่าน DB)</div>
+
+<div class="line"><span class="line-num">20</span><span class="line-code">    <span class="kw">const</span> db = DatabaseService.<span class="fn">getInstance</span>();</span></div>
+<div class="line-explain">หยิบตัวจัดการ DB มาใช้ (มีตัวเดียวทั้ง app = Singleton pattern)</div>
+
+<div class="line"><span class="line-num">21</span><span class="line-code">    <span class="kw">const</span> prods = <span class="kw">await</span> db.<span class="fn">getAllProducts</span>();</span></div>
+<div class="line-explain"><b>await</b> = "รอให้เสร็จ" → ดึงสินค้าทั้งหมดจาก DB แล้วเก็บใน prods</div>
+
+<div class="line"><span class="line-num">22</span><span class="line-code">    <span class="fn">setProducts</span>(prods);</span></div>
+<div class="line-explain">เอาข้อมูลสินค้าที่ได้ ไปเก็บใน state → หน้าจอจะ update แสดงสินค้า</div>
+
+<div class="line"><span class="line-num">23-25</span><span class="line-code">    <span class="kw">if</span> (prods.length > <span class="num">0</span> && !selectedProduct) {
+      <span class="fn">setSelectedProduct</span>(prods[<span class="num">0</span>].id);
+      <span class="fn">loadProductStock</span>(prods[<span class="num">0</span>].id);
+    }</span></div>
+<div class="line-explain">ถ้ามีสินค้าอย่างน้อย 1 ตัว + ยังไม่ได้เลือก → เลือกตัวแรกให้อัตโนมัติ + โหลดสต็อกของมัน</div>
+
+<div class="line"><span class="line-num">26</span><span class="line-code">    <span class="kw">const</span> logs = <span class="kw">await</span> db.<span class="fn">getRecentLogs</span>(<span class="num">10</span>);</span></div>
+<div class="line-explain">ดึงประวัติล่าสุด 10 รายการจาก DB</div>
+
+<div class="line"><span class="line-num">27</span><span class="line-code">    <span class="fn">setRecentLogs</span>(logs.<span class="fn">filter</span>(l => l.type === <span class="str">'outbound'</span>));</span></div>
+<div class="line-explain"><b>filter</b> = กรองเอาเฉพาะประเภท "outbound" (เบิกจ่าย) → เก็บใน state</div>
+
+<div class="line"><span class="line-num">29</span><span class="line-code">  <span class="fn">useFocusEffect</span>(<span class="fn">useCallback</span>(() => { <span class="fn">loadData</span>(); }, [loadData]));</span></div>
+<div class="line-explain">ทุกครั้งที่ผู้ใช้เปิดหน้านี้ (หรือกลับมาจากหน้าอื่น) → เรียก loadData() โหลดข้อมูลใหม่</div>
+
+<div class="sep"></div>
+
+<!-- LOAD PRODUCT STOCK -->
+<div class="section-label">📊 ส่วนที่ 4: loadProductStock (โหลดสต็อกของสินค้าที่เลือก)</div>
+
+<div class="line"><span class="line-num">31</span><span class="line-code">  <span class="kw">const</span> <span class="fn">loadProductStock</span> = <span class="kw">async</span> (productId: <span class="typ">number</span>) => {</span></div>
+<div class="line-explain">ฟังก์ชันรับ productId → ไปดูว่าสินค้าตัวนี้เก็บอยู่โซนไหนบ้าง</div>
+
+<div class="line"><span class="line-num">32</span><span class="line-code">    <span class="kw">const</span> db = DatabaseService.<span class="fn">getInstance</span>();</span></div>
+<div class="line-explain">หยิบตัวจัดการ DB</div>
+
+<div class="line"><span class="line-num">33</span><span class="line-code">    <span class="kw">const</span> stock = <span class="kw">await</span> db.<span class="fn">getStockByProduct</span>(productId);</span></div>
+<div class="line-explain">ดึง stock entries ของสินค้าตัวนี้ (ทุกโซนที่มีอยู่)</div>
+
+<div class="line"><span class="line-num">34</span><span class="line-code">    <span class="fn">setProductStock</span>(stock.<span class="fn">filter</span>(s => s.quantity > <span class="num">0</span>));</span></div>
+<div class="line-explain">กรองเอาเฉพาะโซนที่มีของ (quantity > 0) แล้วเก็บใน state</div>
+
+<div class="sep"></div>
+
+<!-- HANDLE OUTBOUND -->
+<div class="section-label">⭐ ส่วนที่ 5: handleOutbound (ฟังก์ชันหลัก — เบิกจ่ายสินค้า)</div>
+
+<div class="line"><span class="line-num">40</span><span class="line-code">  <span class="kw">const</span> <span class="fn">handleOutbound</span> = <span class="kw">async</span> () => {</span></div>
+<div class="line-explain">ฟังก์ชันนี้ถูกเรียกเมื่อกดปุ่ม "เบิกจ่ายสินค้า"</div>
+
+<div class="line"><span class="line-num">41</span><span class="line-code">    <span class="kw">if</span> (!selectedProduct) { Toast.show({<span class="str">'กรุณาเลือกสินค้า'</span>}); <span class="kw">return</span>; }</span></div>
+<div class="line-explain red"><b>Validation #1:</b> ถ้ายังไม่เลือกสินค้า → แจ้ง error แล้วหยุด (return = ไม่ทำต่อ)</div>
+
+<div class="line"><span class="line-num">42</span><span class="line-code">    <span class="kw">const</span> qty = <span class="fn">parseInt</span>(quantity);</span></div>
+<div class="line-explain">แปลง string ที่ผู้ใช้พิมพ์ → เป็นตัวเลข (เช่น "50" → 50)</div>
+
+<div class="line"><span class="line-num">43</span><span class="line-code">    <span class="kw">if</span> (!qty || qty <= <span class="num">0</span>) { Toast.show({<span class="str">'กรุณาระบุจำนวนที่มากกว่า 0'</span>}); <span class="kw">return</span>; }</span></div>
+<div class="line-explain red"><b>Validation #2:</b> ถ้าจำนวน ≤ 0 หรือไม่ใช่ตัวเลข → แจ้ง error แล้วหยุด</div>
+
+<div class="line"><span class="line-num">45</span><span class="line-code">    <span class="kw">const</span> totalAvailable = productStock.<span class="fn">reduce</span>((sum, s) => sum + s.quantity, <span class="num">0</span>);</span></div>
+<div class="line-explain"><b>reduce</b> = "รวมค่า" → บวก quantity ของทุกโซนเข้าด้วยกัน = สต็อกรวมทั้งหมด<br>เช่น A1=100, A2=50 → totalAvailable = 150</div>
+
+<div class="line"><span class="line-num">46</span><span class="line-code">    <span class="kw">if</span> (qty > totalAvailable) { Toast.show({<span class="str">'ไม่พอจ่าย'</span>}); <span class="kw">return</span>; }</span></div>
+<div class="line-explain red"><b>Validation #3:</b> ถ้าต้องการเบิกมากกว่าที่มี → แจ้ง error แล้วหยุด</div>
+
+<div class="line"><span class="line-num">49</span><span class="line-code">    <span class="kw">const</span> sorted = [...productStock].<span class="fn">sort</span>((a, b) => b.quantity - a.quantity);</span></div>
+<div class="line-explain"><b>[...productStock]</b> = copy array (ไม่แก้ตัวเดิม)<br><b>.sort((a,b) => b.quantity - a.quantity)</b> = เรียงจากมากไปน้อย<br>เช่น [A1:100, B2:50, C1:20] → [A1:100, B2:50, C1:20]</div>
+
+<div class="line"><span class="line-num">50</span><span class="line-code">    <span class="kw">let</span> remaining = qty;</span></div>
+<div class="line-explain"><b>remaining</b> = "จำนวนที่ยังต้องเบิกอีก" เริ่ม = จำนวนที่ต้องการทั้งหมด</div>
+
+<div class="line"><span class="line-num">51</span><span class="line-code">    <span class="kw">const</span> plan: { zone, qty, before, after }[] = [];</span></div>
+<div class="line-explain"><b>plan</b> = แผนการเบิก — จะเก็บว่าเบิกจากโซนไหน เท่าไหร่ เหลือเท่าไหร่</div>
+
+<div class="line"><span class="line-num">53</span><span class="line-code">    <span class="kw">for</span> (<span class="kw">const</span> s <span class="kw">of</span> sorted) {</span></div>
+<div class="line-explain">วน loop ทีละโซน (เริ่มจากโซนที่มีมากสุด)</div>
+
+<div class="line"><span class="line-num">54</span><span class="line-code">      <span class="kw">if</span> (remaining <= <span class="num">0</span>) <span class="kw">break</span>;</span></div>
+<div class="line-explain">ถ้าเบิกครบแล้ว (remaining=0) → หยุด loop ไม่ต้องเบิกจากโซนถัดไป</div>
+
+<div class="line"><span class="line-num">55</span><span class="line-code">      <span class="kw">const</span> take = Math.<span class="fn">min</span>(remaining, s.quantity);</span></div>
+<div class="line-explain"><b>Math.min</b> = เอาค่าน้อยกว่า → ถ้าต้องการ 80 แต่โซนมี 100 → เอา 80 / ถ้าต้องการ 80 แต่มี 50 → เอา 50</div>
+
+<div class="line"><span class="line-num">56</span><span class="line-code">      plan.<span class="fn">push</span>({ zone: s.zone, qty: take, before: s.quantity, after: s.quantity - take });</span></div>
+<div class="line-explain">เพิ่มรายการลงใน plan: โซนไหน เบิกเท่าไหร่ ก่อนเบิกมีเท่าไหร่ หลังเบิกเหลือเท่าไหร่</div>
+
+<div class="line"><span class="line-num">57</span><span class="line-code">      remaining -= take;</span></div>
+<div class="line-explain">ลดจำนวนที่ "ยังต้องเบิกอีก" ลง → ถ้า remaining=0 loop ถัดไปจะ break</div>
+
+<div class="sep"></div>
+
+<div class="section-label">💬 ส่วนที่ 6: Alert ยืนยัน + ทำการเบิกจริง</div>
+
+<div class="line"><span class="line-num">61</span><span class="line-code">    <span class="kw">const</span> prod = products.<span class="fn">find</span>(p => p.id === selectedProduct);</span></div>
+<div class="line-explain"><b>find</b> = หาสินค้าที่ id ตรงกับที่เลือก → ได้ข้อมูลชื่อ, หน่วย</div>
+
+<div class="line"><span class="line-num">62</span><span class="line-code">    <span class="kw">const</span> planText = plan.<span class="fn">map</span>(p => <span class="str">`• ${p.zone}: เบิก ${p.qty} (เหลือ ${p.after})`</span>).<span class="fn">join</span>(<span class="str">'\n'</span>);</span></div>
+<div class="line-explain"><b>map</b> = แปลงทุกรายการใน plan เป็นข้อความ → <b>join('\n')</b> = รวมเป็น string เดียวคั่นด้วยบรรทัดใหม่</div>
+
+<div class="line"><span class="line-num">65</span><span class="line-code">    Alert.<span class="fn">alert</span>(<span class="str">'ยืนยันการเบิกจ่าย'</span>, message, [</span></div>
+<div class="line-explain">แสดง popup ถามผู้ใช้ มี 2 ปุ่ม:</div>
+
+<div class="line"><span class="line-num">66</span><span class="line-code">      { text: <span class="str">'ยกเลิก'</span> },</span></div>
+<div class="line-explain">ปุ่ม "ยกเลิก" → ไม่ทำอะไร popup หายไป</div>
+
+<div class="line"><span class="line-num">67</span><span class="line-code">      { text: <span class="str">'ยืนยัน'</span>, onPress: <span class="kw">async</span> () => {</span></div>
+<div class="line-explain">ปุ่ม "ยืนยัน" → เมื่อกด จะทำ function ข้างใน:</div>
+
+<div class="line"><span class="line-num">69</span><span class="line-code">          <span class="kw">for</span> (<span class="kw">const</span> p <span class="kw">of</span> plan) {</span></div>
+<div class="line-explain">วน loop ทุกรายการใน plan (เบิกทีละโซน)</div>
+
+<div class="line"><span class="line-num">70</span><span class="line-code">            <span class="kw">await</span> db.<span class="fn">outbound</span>(selectedProduct, p.zone, p.qty);</span></div>
+<div class="line-explain orange"><b>สั่ง DB ลด stock จริง</b> — ลดของในโซนนั้น + บันทึกประวัติ (log)</div>
+
+<div class="line"><span class="line-num">74</span><span class="line-code">          <span class="fn">setLastOutboundSummary</span>(plan.<span class="fn">map</span>(p => ({ zone: p.zone, qty: p.qty, remaining: p.after })));</span></div>
+<div class="line-explain green">เก็บสรุปการเบิกใน state → หน้าจอจะแสดงการ์ดสรุป (เขียว)</div>
+
+<div class="line"><span class="line-num">75</span><span class="line-code">          <span class="fn">setQuantity</span>(<span class="str">''</span>);</span></div>
+<div class="line-explain">ล้างช่องกรอกจำนวน กลับเป็นว่าง</div>
+
+<div class="line"><span class="line-num">76</span><span class="line-code">          <span class="kw">await</span> <span class="fn">loadProductStock</span>(selectedProduct);</span></div>
+<div class="line-explain">โหลดสต็อกใหม่ (เพราะเพิ่งเบิกไป ตัวเลขเปลี่ยน)</div>
+
+<div class="sep"></div>
+
+<div class="section-label">🎨 ส่วนที่ 7: ส่วนแสดงผล (JSX) — สรุปสั้นๆ</div>
+
+<div class="line-explain">• <b>&lt;ScrollView&gt;</b> — กล่องหลักที่ scroll ได้</div>
+<div class="line-explain">• <b>&lt;Card&gt;</b> — การ์ดฟอร์ม (พื้นขาว มีเงา)</div>
+<div class="line-explain">• <b>&lt;Picker&gt;</b> — dropdown เลือกสินค้า เมื่อเปลี่ยน → เรียก handleProductChange</div>
+<div class="line-explain">• <b>{productStock.length > 0 && (...)}</b> — ถ้ามีสต็อก → แสดงรายละเอียดโซน</div>
+<div class="line-explain">• <b>&lt;TextInput&gt;</b> — ช่องกรอกจำนวน เมื่อพิมพ์ → เก็บค่าใน quantity</div>
+<div class="line-explain">• <b>&lt;Button onPress={handleOutbound}&gt;</b> — เมื่อกด → เรียก handleOutbound</div>
+<div class="line-explain green">• <b>{lastOutboundSummary && (...)}</b> — ถ้ามีสรุป → แสดงการ์ดสรุปสีเขียว</div>
+<div class="line-explain">• <b>{recentLogs.map(...)}</b> — แสดงประวัติเบิกจ่ายทีละรายการ</div>
+
+<div class="sep"></div>
+
+<div class="section-label">🎯 สรุปรวม: ฟังก์ชันสำคัญในไฟล์นี้</div>
+
+<div class="line-explain"><b>loadData()</b> — โหลดสินค้า + ประวัติจาก DB (เรียกทุกครั้งที่เปิดหน้า)</div>
+<div class="line-explain"><b>loadProductStock(id)</b> — โหลดว่าสินค้าตัวนี้อยู่โซนไหนบ้าง</div>
+<div class="line-explain"><b>handleProductChange(id)</b> — เมื่อผู้ใช้เปลี่ยนสินค้าใน dropdown</div>
+<div class="line-explain orange"><b>handleOutbound()</b> — ฟังก์ชันหลัก! ตรวจสอบ → คำนวณแผน → ถามยืนยัน → เบิกจริง → แสดงสรุป</div>
+
+</div>
+</body>
+</html>

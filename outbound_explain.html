@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OutboundScreen.tsx - อธิบายโค้ดทีละบรรทัด</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', sans-serif; background: #0d1117; color: #c9d1d9; line-height: 1.8; padding: 24px; }
+        .container { max-width: 900px; margin: 0 auto; }
+        h1 { color: #58a6ff; text-align: center; margin-bottom: 8px; }
+        .subtitle { text-align: center; color: #8b949e; margin-bottom: 32px; }
+        .section { background: #161b22; border: 1px solid #30363d; border-radius: 12px; padding: 20px; margin-bottom: 20px; }
+        .section-title { color: #58a6ff; font-size: 18px; font-weight: 600; margin-bottom: 12px; border-bottom: 1px solid #30363d; padding-bottom: 8px; }
+        .code { background: #0d1117; border: 1px solid #30363d; border-radius: 8px; padding: 14px; margin: 8px 0; font-family: 'Consolas', monospace; font-size: 13px; overflow-x: auto; line-height: 1.6; }
+        .keyword { color: #ff7b72; }
+        .type { color: #79c0ff; }
+        .string { color: #a5d6ff; }
+        .func { color: #d2a8ff; }
+        .comment { color: #8b949e; font-style: italic; }
+        .number { color: #79c0ff; }
+        .explain { background: #1c2128; border-left: 3px solid #58a6ff; padding: 12px 16px; margin: 8px 0; border-radius: 0 8px 8px 0; }
+        .explain-title { color: #f0883e; font-weight: 600; margin-bottom: 4px; }
+        .explain p { color: #c9d1d9; font-size: 14px; }
+        .analogy { background: #1c2128; border-left: 3px solid #3fb950; padding: 12px 16px; margin: 8px 0; border-radius: 0 8px 8px 0; }
+        .analogy-title { color: #3fb950; font-weight: 600; margin-bottom: 4px; }
+        .highlight { background: #388bfd26; padding: 2px 6px; border-radius: 4px; color: #58a6ff; }
+        .warn { background: #f8514926; padding: 2px 6px; border-radius: 4px; color: #f85149; }
+        .tag { display: inline-block; background: #30363d; color: #79c0ff; padding: 2px 8px; border-radius: 4px; font-size: 12px; margin-right: 4px; }
+        .flow { display: flex; flex-direction: column; gap: 8px; margin: 12px 0; }
+        .flow-step { background: #1c2128; padding: 10px 14px; border-radius: 8px; display: flex; align-items: center; gap: 10px; }
+        .flow-num { background: #58a6ff; color: #0d1117; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 12px; flex-shrink: 0; }
+        .flow-text { color: #c9d1d9; font-size: 13px; }
+    </style>
+</head>
+<body>
+<div class="container">
+
+<h1>📤 OutboundScreen.tsx</h1>
+<p class="subtitle">อธิบายโค้ดหน้า "เบิกจ่ายสินค้า" ทีละส่วน — สำหรับผู้เริ่มต้น</p>
+
+<!-- ส่วนที่ 1: Import -->
+<div class="section">
+    <div class="section-title">1. Import — นำเข้าเครื่องมือที่ต้องใช้</div>
+    <div class="code">
+<span class="keyword">import</span> React, { useState, useCallback } <span class="keyword">from</span> <span class="string">'react'</span>;
+<span class="keyword">import</span> { View, ScrollView, StyleSheet, Alert } <span class="keyword">from</span> <span class="string">'react-native'</span>;
+<span class="keyword">import</span> { Text, Button, TextInput, Card } <span class="keyword">from</span> <span class="string">'react-native-paper'</span>;
+<span class="keyword">import</span> { Picker } <span class="keyword">from</span> <span class="string">'@react-native-picker/picker'</span>;
+<span class="keyword">import</span> Icon <span class="keyword">from</span> <span class="string">'react-native-vector-icons/MaterialCommunityIcons'</span>;
+<span class="keyword">import</span> { useFocusEffect } <span class="keyword">from</span> <span class="string">'@react-navigation/native'</span>;
+<span class="keyword">import</span> Toast <span class="keyword">from</span> <span class="string">'react-native-toast-message'</span>;
+<span class="keyword">import</span> DatabaseService <span class="keyword">from</span> <span class="string">'../db/DatabaseService'</span>;
+<span class="keyword">import</span> { Product, StockEntry, TransactionLog } <span class="keyword">from</span> <span class="string">'../types'</span>;
+    </div>
+    <div class="explain">
+        <div class="explain-title">💡 อธิบาย:</div>
+        <p><span class="highlight">import</span> = "ยืมเครื่องมือมาใช้" เหมือนเปิดกล่องเครื่องมือแล้วหยิบอันที่ต้องใช้</p>
+        <p>• <span class="highlight">useState</span> — สร้างตัวแปรที่เปลี่ยนค่าได้ (เมื่อเปลี่ยน หน้าจอจะ update)</p>
+        <p>• <span class="highlight">useCallback</span> — สร้าง function ที่จำค่าไว้ ไม่สร้างใหม่ทุกรอบ</p>
+        <p>• <span class="highlight">View, ScrollView</span> — กล่องใส่ของ (เหมือน div ใน HTML)</p>
+        <p>• <span class="highlight">Alert</span> — กล่อง popup ถามยืนยัน</p>
+        <p>• <span class="highlight">Picker</span> — dropdown เลือกค่า</p>
+        <p>• <span class="highlight">Toast</span> — ข้อความแจ้งเตือนที่โผล่มาแปปแล้วหาย</p>
+        <p>• <span class="highlight">DatabaseService</span> — ตัวจัดการฐานข้อมูล</p>
+    </div>
+    <div class="analogy">
+        <div class="analogy-title">🎮 เปรียบเทียบ:</div>
+        <p>เหมือนก่อนทำอาหาร ต้องหยิบเครื่องมือมาวางบนโต๊ะก่อน — มีด, กระทะ, ถ้วย ฯลฯ</p>
+    </div>
+</div>
+
+<!-- ส่วนที่ 2: State -->
+<div class="section">
+    <div class="section-title">2. State — ตัวแปรที่หน้าจอจำไว้</div>
+    <div class="code">
+<span class="keyword">const</span> [products, setProducts] = <span class="func">useState</span>&lt;<span class="type">Product[]</span>&gt;([]);
+<span class="keyword">const</span> [selectedProduct, setSelectedProduct] = <span class="func">useState</span>&lt;<span class="type">number</span>&gt;(<span class="number">0</span>);
+<span class="keyword">const</span> [productStock, setProductStock] = <span class="func">useState</span>&lt;<span class="type">StockEntry[]</span>&gt;([]);
+<span class="keyword">const</span> [quantity, setQuantity] = <span class="func">useState</span>(<span class="string">''</span>);
+<span class="keyword">const</span> [recentLogs, setRecentLogs] = <span class="func">useState</span>&lt;...&gt;([]);
+<span class="keyword">const</span> [lastOutboundSummary, setLastOutboundSummary] = <span class="func">useState</span>(<span class="keyword">null</span>);
+    </div>
+    <div class="explain">
+        <div class="explain-title">💡 อธิบาย:</div>
+        <p><span class="highlight">useState</span> สร้างตัวแปร 2 ตัว: [ค่า, ฟังก์ชันเปลี่ยนค่า]</p>
+        <p>• <span class="highlight">products</span> — รายชื่อสินค้าทั้งหมด</p>
+        <p>• <span class="highlight">selectedProduct</span> — สินค้าที่ผู้ใช้เลือกอยู่ (เก็บ id)</p>
+        <p>• <span class="highlight">productStock</span> — สต็อกของสินค้าที่เลือก (อยู่โซนไหน กี่ชิ้น)</p>
+        <p>• <span class="highlight">quantity</span> — จำนวนที่ผู้ใช้พิมพ์</p>
+        <p>• <span class="highlight">recentLogs</span> — ประวัติเบิกจ่ายล่าสุด</p>
+        <p>• <span class="highlight">lastOutboundSummary</span> — สรุปการเบิกครั้งล่าสุด</p>
+    </div>
+    <div class="analogy">
+        <div class="analogy-title">🎮 เปรียบเทียบ:</div>
+        <p>เหมือนกระดาษโน้ตที่แปะอยู่หน้าจอ — เขียนค่าไว้ ลบแล้วเขียนใหม่ได้ ทุกครั้งที่เขียนใหม่ หน้าจอจะ refresh</p>
+    </div>
+</div>
+
+<!-- ส่วนที่ 3: loadData -->
+<div class="section">
+    <div class="section-title">3. loadData — โหลดข้อมูลจาก Database</div>
+    <div class="code">
+<span class="keyword">const</span> <span class="func">loadData</span> = <span class="func">useCallback</span>(<span class="keyword">async</span> () => {
+  <span class="keyword">const</span> db = DatabaseService.<span class="func">getInstance</span>();
+  <span class="keyword">const</span> prods = <span class="keyword">await</span> db.<span class="func">getAllProducts</span>();
+  <span class="func">setProducts</span>(prods);
+  <span class="comment">// ... โหลด logs ด้วย</span>
+}, []);
+
+<span class="func">useFocusEffect</span>(<span class="func">useCallback</span>(() => { <span class="func">loadData</span>(); }, [loadData]));
+    </div>
+    <div class="explain">
+        <div class="explain-title">💡 อธิบาย:</div>
+        <p>• <span class="highlight">async/await</span> — บอกว่า "รอให้เสร็จก่อนค่อยทำบรรทัดต่อไป" (เพราะอ่าน DB ใช้เวลา)</p>
+        <p>• <span class="highlight">DatabaseService.getInstance()</span> — เอาตัวจัดการ DB มาใช้</p>
+        <p>• <span class="highlight">getAllProducts()</span> — ดึงสินค้าทั้งหมดจาก DB</p>
+        <p>• <span class="highlight">setProducts(prods)</span> — เอาข้อมูลที่ได้ไปเก็บใน state</p>
+        <p>• <span class="highlight">useFocusEffect</span> — "ทุกครั้งที่กลับมาหน้านี้ ให้โหลดข้อมูลใหม่"</p>
+    </div>
+    <div class="analogy">
+        <div class="analogy-title">🎮 เปรียบเทียบ:</div>
+        <p>เหมือนเปิดสมุดคลัง ทุกครั้งที่เดินมาถึงหน้าเคาน์เตอร์ → เปิดดูว่ามีสินค้าอะไรบ้าง</p>
+    </div>
+</div>
+
+<!-- ส่วนที่ 4: handleProductChange -->
+<div class="section">
+    <div class="section-title">4. handleProductChange — เมื่อเลือกสินค้า</div>
+    <div class="code">
+<span class="keyword">const</span> <span class="func">handleProductChange</span> = <span class="keyword">async</span> (productId: <span class="type">number</span>) => {
+  <span class="func">setSelectedProduct</span>(productId);          <span class="comment">// จำว่าเลือกตัวไหน</span>
+  <span class="func">setLastOutboundSummary</span>(<span class="keyword">null</span>);           <span class="comment">// ลบสรุปเก่า</span>
+  <span class="keyword">await</span> <span class="func">loadProductStock</span>(productId);   <span class="comment">// โหลดว่าสินค้านี้อยู่โซนไหนบ้าง</span>
+};
+    </div>
+    <div class="explain">
+        <div class="explain-title">💡 อธิบาย:</div>
+        <p>ฟังก์ชันนี้ถูกเรียกเมื่อผู้ใช้เลือกสินค้าจาก dropdown ทำ 3 อย่าง:</p>
+        <p>1. จำว่าเลือกสินค้าตัวไหน</p>
+        <p>2. ลบสรุปการเบิกครั้งก่อน (ถ้ามี)</p>
+        <p>3. ไปดูว่าสินค้านี้เก็บอยู่โซนไหนบ้าง</p>
+    </div>
+</div>
+
+<!-- ส่วนที่ 5: handleOutbound (หัวใจ!) -->
+<div class="section">
+    <div class="section-title">5. handleOutbound — ฟังก์ชันหลัก "เบิกจ่าย" ⭐</div>
+
+    <div class="flow">
+        <div class="flow-step"><div class="flow-num">1</div><div class="flow-text">ตรวจสอบว่าเลือกสินค้าแล้วหรือยัง</div></div>
+        <div class="flow-step"><div class="flow-num">2</div><div class="flow-text">ตรวจสอบจำนวน > 0</div></div>
+        <div class="flow-step"><div class="flow-num">3</div><div class="flow-text">ตรวจสอบว่า stock รวมพอจ่ายไหม</div></div>
+        <div class="flow-step"><div class="flow-num">4</div><div class="flow-text">คำนวณว่าจะเบิกจากโซนไหนบ้าง (มากไปน้อย)</div></div>
+        <div class="flow-step"><div class="flow-num">5</div><div class="flow-text">แสดง popup ถามยืนยัน</div></div>
+        <div class="flow-step"><div class="flow-num">6</div><div class="flow-text">ถ้ายืนยัน → ทำการเบิกจาก DB ทีละโซน</div></div>
+        <div class="flow-step"><div class="flow-num">7</div><div class="flow-text">แสดงสรุป + โหลดข้อมูลใหม่</div></div>
+    </div>
+
+    <div class="code">
+<span class="comment">// ขั้นที่ 1-3: Validation</span>
+<span class="keyword">if</span> (!selectedProduct) { Toast.show({...}); <span class="keyword">return</span>; }
+<span class="keyword">const</span> qty = <span class="func">parseInt</span>(quantity);
+<span class="keyword">if</span> (!qty || qty <= <span class="number">0</span>) { Toast.show({...}); <span class="keyword">return</span>; }
+<span class="keyword">if</span> (qty > totalAvailable) { Toast.show({...}); <span class="keyword">return</span>; }
+    </div>
+    <div class="explain">
+        <div class="explain-title">💡 Validation คืออะไร?</div>
+        <p>= ตรวจสอบข้อมูลก่อนทำจริง ถ้าผิดก็บอก error แล้ว <span class="warn">return</span> (หยุด ไม่ทำต่อ)</p>
+    </div>
+
+    <div class="code">
+<span class="comment">// ขั้นที่ 4: คำนวณแผนการเบิก</span>
+<span class="keyword">const</span> sorted = [...productStock].<span class="func">sort</span>((a, b) => b.quantity - a.quantity);
+<span class="keyword">let</span> remaining = qty;
+<span class="keyword">const</span> plan = [];
+
+<span class="keyword">for</span> (<span class="keyword">const</span> s <span class="keyword">of</span> sorted) {
+  <span class="keyword">if</span> (remaining <= <span class="number">0</span>) <span class="keyword">break</span>;           <span class="comment">// เบิกครบแล้ว หยุด</span>
+  <span class="keyword">const</span> take = Math.<span class="func">min</span>(remaining, s.quantity); <span class="comment">// เอาเท่าที่มีหรือเท่าที่ต้องการ</span>
+  plan.<span class="func">push</span>({ zone: s.zone, qty: take, ... });
+  remaining -= take;                    <span class="comment">// ลดจำนวนที่ยังต้องเบิกอีก</span>
+}
+    </div>
+    <div class="explain">
+        <div class="explain-title">💡 อธิบาย Algorithm:</div>
+        <p>1. <span class="highlight">sort</span> — เรียงโซนจากมีของมากสุดไปน้อยสุด</p>
+        <p>2. <span class="highlight">remaining</span> — จำนวนที่ "ยังต้องเบิกอีก" เริ่มต้น = จำนวนที่ต้องการทั้งหมด</p>
+        <p>3. วน loop ทีละโซน: เอาเท่าที่มี หรือเท่าที่ยังขาด (อันไหนน้อยกว่า)</p>
+        <p>4. ลด remaining ลง → ถ้า remaining = 0 แปลว่าครบแล้ว หยุด</p>
+    </div>
+    <div class="analogy">
+        <div class="analogy-title">🎮 เปรียบเทียบ:</div>
+        <p>เหมือนต้องการแอปเปิ้ล 15 ลูก:</p>
+        <p>• ตู้ A มี 10 ลูก → หยิบ 10 (ยังขาดอีก 5)</p>
+        <p>• ตู้ B มี 8 ลูก → หยิบ 5 (ครบแล้ว!)</p>
+        <p>• ตู้ C มี 3 ลูก → ไม่ต้องหยิบ (ครบแล้ว)</p>
+    </div>
+
+    <div class="code">
+<span class="comment">// ขั้นที่ 5: ถาม popup ยืนยัน</span>
+Alert.<span class="func">alert</span>(<span class="string">'ยืนยันการเบิกจ่าย'</span>, message, [
+  { text: <span class="string">'ยกเลิก'</span> },
+  { text: <span class="string">'ยืนยัน'</span>, onPress: <span class="keyword">async</span> () => {
+    <span class="comment">// ขั้นที่ 6: ทำการเบิกจริง</span>
+    <span class="keyword">for</span> (<span class="keyword">const</span> p <span class="keyword">of</span> plan) {
+      <span class="keyword">await</span> db.<span class="func">outbound</span>(selectedProduct, p.zone, p.qty);
+    }
+    <span class="comment">// ขั้นที่ 7: แสดงสรุป</span>
+    <span class="func">setLastOutboundSummary</span>(plan.map(...));
+  }},
+]);
+    </div>
+    <div class="explain">
+        <div class="explain-title">💡 อธิบาย:</div>
+        <p>• <span class="highlight">Alert.alert</span> — แสดง popup มีปุ่ม 2 ปุ่ม (ยกเลิก / ยืนยัน)</p>
+        <p>• ถ้ากด "ยืนยัน" → วน loop เบิกทีละโซนตาม plan</p>
+        <p>• <span class="highlight">db.outbound()</span> — ลด stock ใน DB + บันทึก log</p>
+        <p>• สุดท้ายเก็บสรุปไว้ใน state เพื่อแสดงบนหน้าจอ</p>
+    </div>
+</div>
+
+<!-- ส่วนที่ 6: JSX/UI -->
+<div class="section">
+    <div class="section-title">6. JSX — ส่วนแสดงผลหน้าจอ</div>
+    <div class="code">
+<span class="keyword">return</span> (
+  &lt;<span class="type">ScrollView</span>&gt;           <span class="comment">&lt;!-- scroll ได้ --&gt;</span>
+    &lt;<span class="type">Card</span>&gt;                  <span class="comment">&lt;!-- การ์ดฟอร์ม --&gt;</span>
+      &lt;<span class="type">Text</span>&gt;เบิกจ่ายสินค้า&lt;/<span class="type">Text</span>&gt;
+      &lt;<span class="type">Picker</span> .../&gt;         <span class="comment">&lt;!-- dropdown เลือกสินค้า --&gt;</span>
+      {stockInfo}             <span class="comment">&lt;!-- แสดงว่าอยู่โซนไหนบ้าง --&gt;</span>
+      &lt;<span class="type">TextInput</span> .../&gt;     <span class="comment">&lt;!-- ช่องกรอกจำนวน --&gt;</span>
+      &lt;<span class="type">Button</span>&gt;เบิกจ่าย&lt;/<span class="type">Button</span>&gt;
+    &lt;/<span class="type">Card</span>&gt;
+
+    {lastOutboundSummary}    <span class="comment">&lt;!-- สรุปการเบิก (ถ้ามี) --&gt;</span>
+    {recentLogs}             <span class="comment">&lt;!-- ประวัติเบิกจ่าย --&gt;</span>
+  &lt;/<span class="type">ScrollView</span>&gt;
+);
+    </div>
+    <div class="explain">
+        <div class="explain-title">💡 JSX คืออะไร?</div>
+        <p>= "HTML ของ React" — เขียน UI ด้วยภาษาคล้าย HTML แต่อยู่ใน JavaScript</p>
+        <p>• <span class="highlight">&lt;View&gt;</span> = กล่อง (เหมือน &lt;div&gt;)</p>
+        <p>• <span class="highlight">&lt;Text&gt;</span> = ข้อความ (เหมือน &lt;p&gt;)</p>
+        <p>• <span class="highlight">&lt;Card&gt;</span> = การ์ดมีเงา (จาก react-native-paper)</p>
+        <p>• <span class="highlight">{...}</span> = ใส่ค่า JavaScript เข้าไปใน UI</p>
+        <p>• <span class="highlight">{condition && &lt;Component/&gt;}</span> = แสดง component เมื่อ condition เป็น true</p>
+    </div>
+</div>
+
+<!-- ส่วนที่ 7: StyleSheet -->
+<div class="section">
+    <div class="section-title">7. StyleSheet — กำหนดหน้าตา</div>
+    <div class="code">
+<span class="keyword">const</span> styles = StyleSheet.<span class="func">create</span>({
+  container: { flex: <span class="number">1</span>, backgroundColor: <span class="string">'#F5F7FA'</span>, padding: <span class="number">12</span> },
+  formCard: { marginBottom: <span class="number">12</span>, borderRadius: <span class="number">12</span>, elevation: <span class="number">2</span> },
+  btn: { borderRadius: <span class="number">8</span>, marginTop: <span class="number">4</span> },
+  ...
+});
+    </div>
+    <div class="explain">
+        <div class="explain-title">💡 อธิบาย:</div>
+        <p>เหมือน CSS แต่เขียนเป็น JavaScript object</p>
+        <p>• <span class="highlight">flex: 1</span> — ขยายเต็มพื้นที่</p>
+        <p>• <span class="highlight">backgroundColor</span> — สีพื้นหลัง</p>
+        <p>• <span class="highlight">borderRadius</span> — มุมโค้ง</p>
+        <p>• <span class="highlight">elevation</span> — เงา (Android)</p>
+        <p>• <span class="highlight">padding</span> — ระยะห่างจากขอบ</p>
+        <p>• <span class="highlight">margin</span> — ระยะห่างจาก element อื่น</p>
+    </div>
+    <div class="analogy">
+        <div class="analogy-title">🎮 เปรียบเทียบ:</div>
+        <p>เหมือนแต่งตัวให้ component — ใส่สี ใส่มุมโค้ง ใส่เงา ให้ดูสวย</p>
+    </div>
+</div>
+
+<!-- สรุป -->
+<div class="section">
+    <div class="section-title">📋 สรุป Flow ทั้งหมด</div>
+    <div class="flow">
+        <div class="flow-step"><div class="flow-num">1</div><div class="flow-text">เปิดหน้า → โหลดสินค้าจาก DB</div></div>
+        <div class="flow-step"><div class="flow-num">2</div><div class="flow-text">ผู้ใช้เลือกสินค้า → โหลดว่าอยู่โซนไหนบ้าง</div></div>
+        <div class="flow-step"><div class="flow-num">3</div><div class="flow-text">แสดงรายละเอียดสต็อก (โซนไหน กี่ชิ้น)</div></div>
+        <div class="flow-step"><div class="flow-num">4</div><div class="flow-text">ผู้ใช้กรอกจำนวนที่ต้องการเบิก</div></div>
+        <div class="flow-step"><div class="flow-num">5</div><div class="flow-text">กดปุ่ม → ระบบคำนวณว่าเบิกจากโซนไหนบ้าง (มากไปน้อย)</div></div>
+        <div class="flow-step"><div class="flow-num">6</div><div class="flow-text">แสดง popup ยืนยัน พร้อมแผนการเบิก</div></div>
+        <div class="flow-step"><div class="flow-num">7</div><div class="flow-text">กดยืนยัน → เบิกจาก DB ทีละโซน</div></div>
+        <div class="flow-step"><div class="flow-num">8</div><div class="flow-text">แสดงสรุป: เบิกจากไหน เหลือเท่าไหร่</div></div>
+    </div>
+</div>
+
+<p style="text-align:center; color:#8b949e; margin-top:24px; font-size:12px;">
+    OutboundScreen.tsx — Code Explanation for Beginners<br>
+    WMS React Native App
+</p>
+
+</div>
+</body>
+</html>
