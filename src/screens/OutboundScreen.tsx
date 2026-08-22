@@ -107,6 +107,8 @@ const OutboundScreen: React.FC = () => {
             style={styles.btn}
             icon="package-up"
             disabled={noStock}
+            buttonColor="#D84315"
+            textColor="#ffffff"
           >
             📤 จ่ายสินค้าออก
           </Button>

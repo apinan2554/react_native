@@ -112,6 +112,8 @@ const TransferScreen: React.FC = () => {
             style={styles.btn}
             icon="swap-horizontal"
             disabled={noStock}
+            buttonColor="#00897B"
+            textColor="#ffffff"
           >
             🔄 ย้ายสินค้า
           </Button>

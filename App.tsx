@@ -1,10 +1,19 @@
 import React, { useEffect, useState } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
-import { PaperProvider } from 'react-native-paper';
+import { PaperProvider, MD3LightTheme } from 'react-native-paper';
 import { ActivityIndicator, View, StyleSheet } from 'react-native';
 import Toast from 'react-native-toast-message';
 import AppNavigator from './src/navigation/AppNavigator';
 import DatabaseService from './src/db/DatabaseService';
+
+const theme = {
+  ...MD3LightTheme,
+  colors: {
+    ...MD3LightTheme.colors,
+    onSurface: '#000000',
+    onBackground: '#000000',
+  },
+};
 
 const App: React.FC = () => {
   const [ready, setReady] = useState(false);
@@ -30,7 +39,7 @@ const App: React.FC = () => {
   }
 
   return (
-    <PaperProvider>
+    <PaperProvider theme={theme}>
       <NavigationContainer>
         <AppNavigator />
       </NavigationContainer>

@@ -136,7 +136,7 @@ const ProductScreen: React.FC = () => {
               {CATEGORIES.map((c) => <Picker.Item key={c} label={c} value={c} color="#000" />)}
             </Picker>
           </View>
-          <Button mode="contained" onPress={handleAdd} style={styles.addBtn} icon="plus">
+          <Button mode="contained" onPress={handleAdd} style={styles.addBtn} icon="plus" buttonColor="#1565C0" textColor="#ffffff">
             เพิ่มสินค้า
           </Button>
         </Card.Content>
@@ -166,8 +166,8 @@ const ProductScreen: React.FC = () => {
           <TextInput label="Reorder Point" value={editForm.reorderPoint} onChangeText={(t) => setEditForm({ ...editForm, reorderPoint: t })} keyboardType="numeric" mode="outlined" style={styles.input} dense />
           <TextInput label="รายละเอียด" value={editForm.description} onChangeText={(t) => setEditForm({ ...editForm, description: t })} mode="outlined" style={styles.input} multiline dense />
           <View style={styles.modalActions}>
-            <Button mode="outlined" onPress={() => setEditModalVisible(false)} style={styles.cancelBtn}>ยกเลิก</Button>
-            <Button mode="contained" onPress={handleSaveEdit} style={styles.saveBtn}>บันทึก</Button>
+            <Button mode="outlined" onPress={() => setEditModalVisible(false)} style={styles.cancelBtn} textColor="#546E7A">ยกเลิก</Button>
+            <Button mode="contained" onPress={handleSaveEdit} style={styles.saveBtn} buttonColor="#1565C0" textColor="#ffffff">บันทึก</Button>
           </View>
         </Modal>
       </Portal>
@@ -189,8 +189,8 @@ const styles = StyleSheet.create({
   lowStockCard: { backgroundColor: '#FFF3E0', borderLeftWidth: 4, borderLeftColor: '#FF9800' },
   itemRow: { flexDirection: 'row', alignItems: 'center', padding: 12 },
   itemHeader: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  itemId: { fontSize: 12, color: '#90A4AE', fontWeight: '500' },
-  itemName: { fontSize: 15, fontWeight: '600', color: '#263238' },
+  itemId: { fontSize: 12, color: '#fff', fontWeight: '600', backgroundColor: '#90CAF9', paddingHorizontal: 8, paddingVertical: 2, borderRadius: 10, overflow: 'hidden' },
+  itemName: { fontSize: 15, fontWeight: '600', color: '#000' },
   itemDetail: { fontSize: 12, color: '#78909C', marginTop: 4 },
   actions: { flexDirection: 'row' },
   empty: { textAlign: 'center', marginTop: 40, color: '#90A4AE', fontSize: 15 },

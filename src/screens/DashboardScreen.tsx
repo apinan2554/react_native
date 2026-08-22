@@ -35,7 +35,7 @@ const DashboardScreen: React.FC = () => {
   return (
     <ScrollView style={styles.container} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}>
       <View style={styles.headerSection}>
-        <Icon name="warehouse" size={28} color="#fff" />
+        <Icon name="warehouse" size={24} color="#fff" />
         <Text style={styles.headerTitle}>Main Warehouse</Text>
         <Text style={styles.headerSub}>ระบบจัดการคลังสินค้า</Text>
       </View>
@@ -114,9 +114,9 @@ const DashboardScreen: React.FC = () => {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#F5F7FA' },
-  headerSection: { backgroundColor: '#455A64', padding: 24, paddingTop: 16, alignItems: 'center', borderBottomLeftRadius: 24, borderBottomRightRadius: 24, marginBottom: 16 },
-  headerTitle: { fontSize: 22, fontWeight: '700', color: '#fff', marginTop: 8 },
-  headerSub: { fontSize: 13, color: '#B0BEC5', marginTop: 4 },
+  headerSection: { backgroundColor: '#455A64', padding: 20, alignItems: 'center', margin: 12, marginBottom: 16, borderRadius: 16 },
+  headerTitle: { fontSize: 20, fontWeight: '700', color: '#fff', marginTop: 6 },
+  headerSub: { fontSize: 12, color: '#B0BEC5', marginTop: 4 },
   grid: { flexDirection: 'row', flexWrap: 'wrap', paddingHorizontal: 12, gap: 10 },
   statCard: { width: '47%', padding: 16, borderRadius: 16, elevation: 2, alignItems: 'center', backgroundColor: '#fff' },
   statIcon: { width: 44, height: 44, borderRadius: 22, justifyContent: 'center', alignItems: 'center', marginBottom: 8 },

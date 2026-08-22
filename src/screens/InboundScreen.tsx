@@ -88,6 +88,8 @@ const InboundScreen: React.FC = () => {
             style={styles.btn}
             icon="package-down"
             disabled={noProducts}
+            buttonColor="#1565C0"
+            textColor="#ffffff"
           >
             📥 รับสินค้าเข้าคลัง
           </Button>
